@@ -1,22 +1,157 @@
+'use client'
+
 import InputCheck from '@/_components/_form/inputCheck'
 import InputNumber from '@/_components/_form/inputNumber'
 import InputText from '@/_components/_form/inputText'
 import Label from '@/_components/_form/label'
 import Select from '@/_components/_form/select'
 import Button from '@/_components/button'
+import Table from '@/_components/table'
 import Pokedex from 'pokedex-promise-v2'
+import { useEffect, useState } from 'react'
 
 const P = new Pokedex()
 
 export default function Home() {
-	(async () => {
+	const [offset, setOffset] = useState(0)
+	const [allPokemon, setAllPokemon] = useState<any[]>([])
+	const [filteredPokemon, setFilteredPokemon] = useState<any[]>([])
+	
+	useEffect(() => {
+		getAllPokemon()
+	}, [offset])
+
+	const getAllPokemon = async () => {
 		try {
-			const data = await P.getPokemonsList({ limit: 10, offset: 0 })
-			console.log(data)
+			const data = await P.getPokemonsList({ limit: 100, offset: offset })
+			data.results.map((x: any) => getPokemon(x.url))
+			data.next && (setOffset(offset + 100))
 		} catch (error) {
 			console.error(error)
 		}
-	})()
+	}
+
+	const getPokemon = async (url: string) => {
+		try {
+			const dataPoke = await P.getResource(url)
+			const dataSpecies = await P.getResource(dataPoke.species.url)
+			setAllPokemon(prev => [...prev, {...dataPoke, ...dataSpecies}])
+		} catch (e) {
+			console.error(e)
+		}
+	}
+
+	const [filterTypes, setFilterTypes] = useState({
+		typeUnknown: true,
+		typeBug: true,
+		typeDark: true,
+		typeDragon: true,
+		typeElectric: true,
+		typeFairy: true,
+		fighting: true,
+		fire: true,
+		flying: true,
+		ghost: true,
+		grass: true,
+		ground: true,
+		ice: true,
+		normal: true,
+		poison: true,
+		psychic: true,
+		rock: true,
+		shadow: true,
+		steel: true,
+		water: true,
+	})
+	const [filterTypesIndex, setFilterTypesIndex] = useState(0)
+	const [filterGen, setFilterGen] = useState({
+		gen1: true,
+		gen2: true,
+		gen3: true,
+		gen4: true,
+		gen5: true,
+		gen6: true,
+		gen7: true,
+		gen8: true,
+		gen9: true,
+		gen10: true,
+	})
+
+	const handleAllFilterChange = (e: any, action: 'select' | 'clear', filter: 'filterTypes' | 'filterGen') => {
+		e.preventDefault()
+		if (action === 'select') {
+			const newFilter = Object.fromEntries(
+				Object.keys(filter === 'filterTypes' ? filterTypes : filterGen).map(key => [key, true])
+			)
+			filter === 'filterTypes' ? setFilterTypes(newFilter as typeof filterTypes) : setFilterGen(newFilter as typeof filterGen)
+		}
+
+		if (action === 'clear') {
+			const newFilter = Object.fromEntries(
+				Object.keys(filter === 'filterTypes' ? filterTypes : filterGen).map(key => [key, false])
+			)
+			filter === 'filterTypes' ? setFilterTypes(newFilter as typeof filterTypes) : setFilterGen(newFilter as typeof filterGen)
+		}
+	}
+
+	const handleFilterTypesChange = (e: any) => {
+		e.preventDefault()
+		const type = e.target.name
+		if (e.target.checked) {
+			setFilterTypes({...filterTypes, [type]: true})
+		} else {
+			setFilterTypes({...filterTypes, [type]: false})
+		}
+	}
+
+	const handleFilterTypesIndexChange = (e:any, index: number) => {
+		e.preventDefault()
+		setFilterTypesIndex(index)
+	}
+
+	const handleFilterGenChange = (e: any) => {
+		e.preventDefault()
+		const gen = e.target.name
+		if (e.target.checked) {
+			setFilterGen({...filterGen, [gen]: true})
+		} else {
+			setFilterGen({...filterGen, [gen]: false})
+		}
+	}
+
+	const handleSubmit = () => {
+		const filtered = allPokemon.filter(p => {
+			const types = p.types.map((t: any) => t.type.name)
+			const selectedTypes = Object.entries(filterTypes)
+				.filter(([key, value]) => value)
+				.map(([key]) => key.replace('type', '').toLowerCase())
+			return selectedTypes.some(type => types.includes(type))
+		})
+		.filter(p => {
+			const genMap: {[key: string]: string} = {
+				gen1: 'generation-i',
+				gen2: 'generation-ii',
+				gen3: 'generation-iii',
+				gen4: 'generation-iv',
+				gen5: 'generation-v',
+				gen6: 'generation-vi',
+				gen7: 'generation-vii',
+				gen8: 'generation-viii',
+				gen9: 'generation-ix',
+				gen10: 'generation-x',
+			}
+			const selectedGens = Object.entries(filterGen)
+				.filter(([key, value]) => value)
+				.map(([key]) => genMap[key])
+			return selectedGens.includes(p.generation.name)
+		})
+
+		setFilteredPokemon(filtered)
+	}
+
+	// useEffect(() => {
+	// 	console.log('filterTypes changed:', filterTypes)
+	// }, [filterTypes])
 
 	const formH2 = "text-xl font-bold text-indigo-800"
 	const formH3 = "font-bold text-indigo-800"
@@ -27,7 +162,7 @@ export default function Home() {
 	return (
 		<main>
 			<h1 className="text-5xl my-10 mx-5 text-center font-black uppercase tracking-widest">Pokedex Search</h1>
-			<form>
+			<form onSubmit={e => e.preventDefault()} className="bg-white p-10 rounded-lg shadow-lg max-w-4xl mx-auto mb-10">
 				{/* <div className={formSection}>
 					<div>
 						<h2 className={formH2}>Basics</h2>
@@ -232,119 +367,101 @@ export default function Home() {
 					<div className="col-span-3">
 						<div className={formRow}>
 							<div className="flex gap-2 mb-4">
-								<Button size="sm">Any</Button>
-								<Button size="sm" variant="outline">Single Type</Button>
-								<Button size="sm" variant="outline">Dual Type</Button>
+								<Button onClick={e => handleFilterTypesIndexChange(e, 0)} size="sm" variant={filterTypesIndex === 0 ? "filled" : "outline"}>Any</Button>
+								<Button onClick={e => handleFilterTypesIndexChange(e, 1)} size="sm" variant={filterTypesIndex === 1 ? "filled" : "outline"}>Single Type</Button>
+								<Button onClick={e => handleFilterTypesIndexChange(e, 2)} size="sm" variant={filterTypesIndex === 2 ? "filled" : "outline"}>Dual Type</Button>
 							</div>
 
 							<fieldset className={formChecks}>
 								<div className="flex">
-									<InputCheck name="unknown" checked disabled />
-									<Label htmlFor="unknown" text="Unknown" />
+									<InputCheck name="typeUnknown" onChange={handleFilterTypesChange} checked={filterTypes.typeUnknown} />
+									<Label htmlFor="typeUnknown" text="Unknown" />
 								</div>
 								<div className="flex">
-									<InputCheck name="bug" checked />
-									<Label htmlFor="bug" text="Bug" />
+									<InputCheck name="typeBug" onChange={handleFilterTypesChange} checked={filterTypes.typeBug} />
+									<Label htmlFor="typeBug" text="Bug" />
 								</div>
 								<div className="flex">
-									<InputCheck name="dark" checked />
-									<Label htmlFor="dark" text="Dark" />
+									<InputCheck name="typeDark" onChange={handleFilterTypesChange} checked={filterTypes.typeDark} />
+									<Label htmlFor="typeDark" text="Dark" />
 								</div>
 								<div className="flex">
-									<InputCheck name="dragon" checked />
-									<Label htmlFor="dragon" text="Dragon" />
+									<InputCheck name="typeDragon" onChange={handleFilterTypesChange} checked={filterTypes.typeDragon} />
+									<Label htmlFor="typeDragon" text="Dragon" />
 								</div>
 								<div className="flex">
-									<InputCheck name="electric" checked />
-									<Label htmlFor="electric" text="Electric" />
+									<InputCheck name="typeElectric" onChange={handleFilterTypesChange} checked={filterTypes.typeElectric} />
+									<Label htmlFor="typeElectric" text="Electric" />
 								</div>
 								<div className="flex">
-									<InputCheck name="fairy" checked />
-									<Label htmlFor="fairy" text="Fairy" />
+									<InputCheck name="typeFairy" onChange={handleFilterTypesChange} checked={filterTypes.typeFairy} />
+									<Label htmlFor="typeFairy" text="Fairy" />
 								</div>
 								<div className="flex">
-									<InputCheck name="fighting" checked />
+									<InputCheck name="fighting" onChange={handleFilterTypesChange} checked={filterTypes.fighting} />
 									<Label htmlFor="fighting" text="Fighting" />
 								</div>
 								<div className="flex">
-									<InputCheck name="fire" checked />
+									<InputCheck name="fire" onChange={handleFilterTypesChange} checked={filterTypes.fire} />
 									<Label htmlFor="fire" text="Fire" />
 								</div>
 								<div className="flex">
-									<InputCheck name="flying" checked />
+									<InputCheck name="flying" onChange={handleFilterTypesChange} checked={filterTypes.flying} />
 									<Label htmlFor="flying" text="Flying" />
 								</div>
 								<div className="flex">
-									<InputCheck name="ghost" checked />
+									<InputCheck name="ghost" onChange={handleFilterTypesChange} checked={filterTypes.ghost} />
 									<Label htmlFor="ghost" text="Ghost" />
 								</div>
 								<div className="flex">
-									<InputCheck name="grass" checked />
+									<InputCheck name="grass" onChange={handleFilterTypesChange} checked={filterTypes.grass} />
 									<Label htmlFor="grass" text="Grass" />
 								</div>
 								<div className="flex">
-									<InputCheck name="ground" checked />
+									<InputCheck name="ground" onChange={handleFilterTypesChange} checked={filterTypes.ground} />
 									<Label htmlFor="ground" text="Ground" />
 								</div>
 								<div className="flex">
-									<InputCheck name="ice" checked />
+									<InputCheck name="ice" onChange={handleFilterTypesChange} checked={filterTypes.ice} />
 									<Label htmlFor="ice" text="Ice" />
 								</div>
 								<div className="flex">
-									<InputCheck name="normal" checked />
+									<InputCheck name="normal" onChange={handleFilterTypesChange} checked={filterTypes.normal} />
 									<Label htmlFor="normal" text="Normal" />
 								</div>
 								<div className="flex">
-									<InputCheck name="poison" checked />
+									<InputCheck name="poison" onChange={handleFilterTypesChange} checked={filterTypes.poison} />
 									<Label htmlFor="poison" text="Poison" />
 								</div>
 								<div className="flex">
-									<InputCheck name="psychic" checked />
+									<InputCheck name="psychic" onChange={handleFilterTypesChange} checked={filterTypes.psychic} />
 									<Label htmlFor="psychic" text="Psychic" />
 								</div>
 								<div className="flex">
-									<InputCheck name="rock" checked />
+									<InputCheck name="rock" onChange={handleFilterTypesChange} checked={filterTypes.rock} />
 									<Label htmlFor="rock" text="Rock" />
 								</div>
 								<div className="flex">
-									<InputCheck name="shadow" checked disabled />
+									<InputCheck name="shadow" onChange={handleFilterTypesChange} checked={filterTypes.shadow} />
 									<Label htmlFor="shadow" text="Shadow" />
 								</div>
 								<div className="flex">
-									<InputCheck name="steel" checked />
+									<InputCheck name="steel" onChange={handleFilterTypesChange} checked={filterTypes.steel} />
 									<Label htmlFor="steel" text="Steel" />
 								</div>
 								<div className="flex">
-									<InputCheck name="water" checked />
+									<InputCheck name="water" onChange={handleFilterTypesChange} checked={filterTypes.water} />
 									<Label htmlFor="water" text="Water" />
 								</div>
 							</fieldset>
 						</div>
 
 						<div className="flex gap-2 mt-4">
-							<Button size="sm">Select All</Button>
-							<Button size="sm">Clear All</Button>
+							<Button size="sm" onClick={e => handleAllFilterChange(e, 'select', 'filterTypes')} >Select All</Button>
+							<Button size="sm" onClick={e => handleAllFilterChange(e, 'clear', 'filterTypes')} >Clear All</Button>
 						</div>
 					</div>
 				</div>
-
-				{/* <div className={formSection}>
-					<div>
-						<h2 className={formH2}>Evolution</h2>
-					</div>
-					<div className="col-span-3">
-						<div className={formRow}>
-							<fieldset>
-								<div className={formChecks}>
-									<div className="flex">
-										<InputCheck name="unknown" />
-										<Label htmlFor="unknown" text="Unknown" />
-									</div>
-								</div>
-							</fieldset>
-						</div>
-					</div>
-				</div> */}
 
 				<div className={formSection}>
 					<div>
@@ -355,56 +472,56 @@ export default function Home() {
 							<h3 className={formH3}>Introduced in</h3>
 							<fieldset>
 								<div className="flex">
-									<InputCheck name="gen1" checked />
-									<Label htmlFor="gen1" text="I" />
+									<InputCheck name="gen1" onChange={handleFilterGenChange} checked={filterGen.gen1} />
+									<Label htmlFor="gen1" text="Generation I" />
 								</div>
 								<div className="flex">
-									<InputCheck name="gen2" checked />
-									<Label htmlFor="gen2" text="II" />
+									<InputCheck name="gen2" onChange={handleFilterGenChange} checked={filterGen.gen2} />
+									<Label htmlFor="gen2" text="Generation II" />
 								</div>
 								<div className="flex">
-									<InputCheck name="gen3" checked />
-									<Label htmlFor="gen3" text="III" />
+									<InputCheck name="gen3" onChange={handleFilterGenChange} checked={filterGen.gen3} />
+									<Label htmlFor="gen3" text="Generation III" />
 								</div>
 								<div className="flex">
-									<InputCheck name="gen4" checked />
-									<Label htmlFor="gen4" text="IV" />
+									<InputCheck name="gen4" onChange={handleFilterGenChange} checked={filterGen.gen4} />
+									<Label htmlFor="gen4" text="Generation IV" />
 								</div>
 								<div className="flex">
-									<InputCheck name="gen5" checked />
-									<Label htmlFor="gen5" text="V" />
+									<InputCheck name="gen5" onChange={handleFilterGenChange} checked={filterGen.gen5} />
+									<Label htmlFor="gen5" text="Generation V" />
 								</div>
 								<div className="flex">
-									<InputCheck name="gen6" checked />
-									<Label htmlFor="gen6" text="VI" />
+									<InputCheck name="gen6" onChange={handleFilterGenChange} checked={filterGen.gen6} />
+									<Label htmlFor="gen6" text="Generation VI" />
 								</div>
 								<div className="flex">
-									<InputCheck name="gen7" checked />
-									<Label htmlFor="gen7" text="VII" />
+									<InputCheck name="gen7" onChange={handleFilterGenChange} checked={filterGen.gen7} />
+									<Label htmlFor="gen7" text="Generation VII" />
 								</div>
 								<div className="flex">
-									<InputCheck name="gen8" checked />
-									<Label htmlFor="gen8" text="VIII" />
+									<InputCheck name="gen8" onChange={handleFilterGenChange} checked={filterGen.gen8} />
+									<Label htmlFor="gen8" text="Generation VIII" />
 								</div>
 								<div className="flex">
-									<InputCheck name="gen9" checked />
-									<Label htmlFor="gen9" text="IX" />
+									<InputCheck name="gen9" onChange={handleFilterGenChange} checked={filterGen.gen9} />
+									<Label htmlFor="gen9" text="Generation IX" />
 								</div>
 								<div className="flex">
-									<InputCheck name="gen10" checked disabled />
-									<Label htmlFor="gen10" text="X" />
+									<InputCheck name="gen10" onChange={handleFilterGenChange} checked={filterGen.gen10} />
+									<Label htmlFor="gen10" text="Generation X" />
 								</div>
 							</fieldset>
 						</div>
 
 						<div className="flex gap-2 mt-4">
-							<Button size="sm">Select All</Button>
-							<Button size="sm">Clear All</Button>
+							<Button size="sm" onClick={e => handleAllFilterChange(e, 'select', 'filterGen')} >Select All</Button>
+							<Button size="sm" onClick={e => handleAllFilterChange(e, 'clear', 'filterGen')} >Clear All</Button>
 						</div>
 					</div>
 				</div>
 
-				<div className={formSection}>
+				{/* <div className={formSection}>
 					<div>
 						<h2 className={formH2}>Stats</h2>
 					</div>
@@ -465,9 +582,12 @@ export default function Home() {
 							</div>
 						</div>
 					</div>
-				</div>
+				</div> */}
 
+				<Button type="submit" onClick={handleSubmit}>Filter & Search</Button>
 			</form>
+
+			{filteredPokemon.length > 0 && <Table filteredPokemon={filteredPokemon} />}
 		</main>
 	);
 }
