@@ -1,6 +1,7 @@
 const Button = ({
 	children,
 	color='primary',
+	disabled,
 	onClick,
 	size='md',
 	variant='filled',
@@ -8,13 +9,14 @@ const Button = ({
 }:{
 	children: React.ReactNode;
 	color?: 'primary',
+	disabled?: boolean,
 	onClick?: (e: any) => void,
 	size?: 'sm' | 'md' | 'lg',
 	variant?: 'filled' | 'outline',
 }) => {
 	const colors = {
 		'primary': {
-			'filled': 'border border-indigo-700 bg-indigo-700 hover:bg-indigo-900 hover:border-indigo-900 focus:ring-indigo-300 text-white',
+			'filled': 'border border-indigo-700 bg-indigo-700 hover:bg-indigo-900 hover:border-indigo-900 focus:ring-indigo-300 text-white disabled:bg-indigo-200 disabled:border-indigo-200 disabled:cursor-not-allowed',
 			'outline': 'border border-indigo-700 text-indigo-700 hover:bg-indigo-700 hover:border-indigo-700 hover:text-white focus:ring-indigo-300',
 		}
 	}
@@ -26,7 +28,7 @@ const Button = ({
 	}
 
 	return (
-		<button className={`${colors[color][variant]} ${sizes[size]} rounded-full transition`} onClick={onClick} {...props}>
+		<button className={`${colors[color][variant]} ${sizes[size]} rounded-full transition`} onClick={onClick} disabled={disabled} {...props}>
 			{children}
 		</button>
 	)

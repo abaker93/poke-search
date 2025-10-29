@@ -7,6 +7,7 @@ import Label from '@/_components/_form/label'
 import Select from '@/_components/_form/select'
 import Button from '@/_components/button'
 import Table from '@/_components/table'
+import { findGenByVerGroup, findNameByLanguage } from '@/_util/find'
 import Pokedex from 'pokedex-promise-v2'
 import { useEffect, useState } from 'react'
 
@@ -14,6 +15,7 @@ const P = new Pokedex()
 
 export default function Home() {
 	const [offset, setOffset] = useState(0)
+	const [pokemonLoaded, setPokemonLoaded] = useState(false)
 	const [allPokemon, setAllPokemon] = useState<any[]>([])
 	const [filteredPokemon, setFilteredPokemon] = useState<any[]>([])
 	
@@ -21,11 +23,20 @@ export default function Home() {
 		getAllPokemon()
 	}, [offset])
 
+	useEffect(() => {
+		const sorted = filteredPokemon.sort((a, b) => a.id - b.id)
+		setFilteredPokemon(sorted)
+	}, [filteredPokemon])
+	
+
 	const getAllPokemon = async () => {
 		try {
 			const data = await P.getPokemonsList({ limit: 100, offset: offset })
-			data.results.map((x: any) => getPokemon(x.url))
+			const pokeData = await Promise.all(data.results.map((x: any) => getPokemon(x.url)))
+			const filter = pokeData.filter((f:any) => f !== undefined)
+			setAllPokemon(prev => [...prev, ...filter])
 			data.next && (setOffset(offset + 100))
+			!data.next && setPokemonLoaded(true)
 		} catch (error) {
 			console.error(error)
 		}
@@ -33,21 +44,37 @@ export default function Home() {
 
 	const getPokemon = async (url: string) => {
 		try {
-			const dataPoke = await P.getResource(url)
-			const dataSpecies = await P.getResource(dataPoke.species.url)
-			setAllPokemon(prev => [...prev, {...dataPoke, ...dataSpecies}])
+			const poke = await P.getResource(url)
+			const species = await P.getResource(poke.species.url)
+			const form = poke.forms[0] && await P.getResource(poke.forms[0].url)
+
+			if (!form) { return }
+
+			const generation = findGenByVerGroup(form.version_group.name)
+			const name = findNameByLanguage(species.names)
+
+			return {
+				generation: generation,
+				height: poke.height,
+				id: poke.id,
+				name: name,
+				order: poke.order,
+				sprite: poke.sprites.front_default,
+				types: poke.types.map((t: any) => t.type.name),
+				weight: poke.weight,
+			}
 		} catch (e) {
 			console.error(e)
 		}
 	}
 
 	const [filterTypes, setFilterTypes] = useState({
-		typeUnknown: true,
-		typeBug: true,
-		typeDark: true,
-		typeDragon: true,
-		typeElectric: true,
-		typeFairy: true,
+		unknown: true,
+		bug: true,
+		dark: true,
+		dragon: true,
+		electric: true,
+		fairy: true,
 		fighting: true,
 		fire: true,
 		flying: true,
@@ -95,7 +122,6 @@ export default function Home() {
 	}
 
 	const handleFilterTypesChange = (e: any) => {
-		e.preventDefault()
 		const type = e.target.name
 		if (e.target.checked) {
 			setFilterTypes({...filterTypes, [type]: true})
@@ -110,7 +136,6 @@ export default function Home() {
 	}
 
 	const handleFilterGenChange = (e: any) => {
-		e.preventDefault()
 		const gen = e.target.name
 		if (e.target.checked) {
 			setFilterGen({...filterGen, [gen]: true})
@@ -121,44 +146,29 @@ export default function Home() {
 
 	const handleSubmit = () => {
 		const filtered = allPokemon.filter(p => {
-			const types = p.types.map((t: any) => t.type.name)
+			const types = p.types
 			const selectedTypes = Object.entries(filterTypes)
-				.filter(([key, value]) => value)
-				.map(([key]) => key.replace('type', '').toLowerCase())
-			return selectedTypes.some(type => types.includes(type))
+				.filter(([k,v]) => v).map(([k]) => k)
+			return selectedTypes.some(t => types.includes(t))
 		})
 		.filter(p => {
-			const genMap: {[key: string]: string} = {
-				gen1: 'generation-i',
-				gen2: 'generation-ii',
-				gen3: 'generation-iii',
-				gen4: 'generation-iv',
-				gen5: 'generation-v',
-				gen6: 'generation-vi',
-				gen7: 'generation-vii',
-				gen8: 'generation-viii',
-				gen9: 'generation-ix',
-				gen10: 'generation-x',
-			}
+			const gen = p.generation
 			const selectedGens = Object.entries(filterGen)
-				.filter(([key, value]) => value)
-				.map(([key]) => genMap[key])
-			return selectedGens.includes(p.generation.name)
+				.filter(([k, v]) => v)
+				.map(([k]) => Number(k.replace('gen', '')))
+				console.log(selectedGens)
+			return selectedGens.includes(gen)
 		})
 
 		setFilteredPokemon(filtered)
 	}
-
-	// useEffect(() => {
-	// 	console.log('filterTypes changed:', filterTypes)
-	// }, [filterTypes])
 
 	const formH2 = "text-xl font-bold text-indigo-800"
 	const formH3 = "font-bold text-indigo-800"
 	const formSection = "grid grid-cols-4 py-10 border-t border-slate-200"
 	const formRow = "flex flex-col mb-2"
 	const formChecks = "grid grid-cols-3 md:grid-cols-4"
-
+	
 	return (
 		<main>
 			<h1 className="text-5xl my-10 mx-5 text-center font-black uppercase tracking-widest">Pokedex Search</h1>
@@ -373,86 +383,12 @@ export default function Home() {
 							</div>
 
 							<fieldset className={formChecks}>
-								<div className="flex">
-									<InputCheck name="typeUnknown" onChange={handleFilterTypesChange} checked={filterTypes.typeUnknown} />
-									<Label htmlFor="typeUnknown" text="Unknown" />
-								</div>
-								<div className="flex">
-									<InputCheck name="typeBug" onChange={handleFilterTypesChange} checked={filterTypes.typeBug} />
-									<Label htmlFor="typeBug" text="Bug" />
-								</div>
-								<div className="flex">
-									<InputCheck name="typeDark" onChange={handleFilterTypesChange} checked={filterTypes.typeDark} />
-									<Label htmlFor="typeDark" text="Dark" />
-								</div>
-								<div className="flex">
-									<InputCheck name="typeDragon" onChange={handleFilterTypesChange} checked={filterTypes.typeDragon} />
-									<Label htmlFor="typeDragon" text="Dragon" />
-								</div>
-								<div className="flex">
-									<InputCheck name="typeElectric" onChange={handleFilterTypesChange} checked={filterTypes.typeElectric} />
-									<Label htmlFor="typeElectric" text="Electric" />
-								</div>
-								<div className="flex">
-									<InputCheck name="typeFairy" onChange={handleFilterTypesChange} checked={filterTypes.typeFairy} />
-									<Label htmlFor="typeFairy" text="Fairy" />
-								</div>
-								<div className="flex">
-									<InputCheck name="fighting" onChange={handleFilterTypesChange} checked={filterTypes.fighting} />
-									<Label htmlFor="fighting" text="Fighting" />
-								</div>
-								<div className="flex">
-									<InputCheck name="fire" onChange={handleFilterTypesChange} checked={filterTypes.fire} />
-									<Label htmlFor="fire" text="Fire" />
-								</div>
-								<div className="flex">
-									<InputCheck name="flying" onChange={handleFilterTypesChange} checked={filterTypes.flying} />
-									<Label htmlFor="flying" text="Flying" />
-								</div>
-								<div className="flex">
-									<InputCheck name="ghost" onChange={handleFilterTypesChange} checked={filterTypes.ghost} />
-									<Label htmlFor="ghost" text="Ghost" />
-								</div>
-								<div className="flex">
-									<InputCheck name="grass" onChange={handleFilterTypesChange} checked={filterTypes.grass} />
-									<Label htmlFor="grass" text="Grass" />
-								</div>
-								<div className="flex">
-									<InputCheck name="ground" onChange={handleFilterTypesChange} checked={filterTypes.ground} />
-									<Label htmlFor="ground" text="Ground" />
-								</div>
-								<div className="flex">
-									<InputCheck name="ice" onChange={handleFilterTypesChange} checked={filterTypes.ice} />
-									<Label htmlFor="ice" text="Ice" />
-								</div>
-								<div className="flex">
-									<InputCheck name="normal" onChange={handleFilterTypesChange} checked={filterTypes.normal} />
-									<Label htmlFor="normal" text="Normal" />
-								</div>
-								<div className="flex">
-									<InputCheck name="poison" onChange={handleFilterTypesChange} checked={filterTypes.poison} />
-									<Label htmlFor="poison" text="Poison" />
-								</div>
-								<div className="flex">
-									<InputCheck name="psychic" onChange={handleFilterTypesChange} checked={filterTypes.psychic} />
-									<Label htmlFor="psychic" text="Psychic" />
-								</div>
-								<div className="flex">
-									<InputCheck name="rock" onChange={handleFilterTypesChange} checked={filterTypes.rock} />
-									<Label htmlFor="rock" text="Rock" />
-								</div>
-								<div className="flex">
-									<InputCheck name="shadow" onChange={handleFilterTypesChange} checked={filterTypes.shadow} />
-									<Label htmlFor="shadow" text="Shadow" />
-								</div>
-								<div className="flex">
-									<InputCheck name="steel" onChange={handleFilterTypesChange} checked={filterTypes.steel} />
-									<Label htmlFor="steel" text="Steel" />
-								</div>
-								<div className="flex">
-									<InputCheck name="water" onChange={handleFilterTypesChange} checked={filterTypes.water} />
-									<Label htmlFor="water" text="Water" />
-								</div>
+								{Object.entries(filterTypes).map(([t, v], i) => (
+									<div key={i} className="flex">
+										<InputCheck name={t} onChange={handleFilterTypesChange} checked={v} />
+										<Label htmlFor={t} text={t.charAt(0).toUpperCase() + t.slice(1)} />
+									</div>
+								))}
 							</fieldset>
 						</div>
 
@@ -584,10 +520,10 @@ export default function Home() {
 					</div>
 				</div> */}
 
-				<Button type="submit" onClick={handleSubmit}>Filter & Search</Button>
+				<Button size="lg" onClick={handleSubmit} disabled={!pokemonLoaded}>Filter & Search</Button>
 			</form>
 
-			{filteredPokemon.length > 0 && <Table filteredPokemon={filteredPokemon} />}
+			{filteredPokemon && <Table filteredPokemon={filteredPokemon} />}
 		</main>
 	);
 }
