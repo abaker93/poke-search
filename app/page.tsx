@@ -7,7 +7,8 @@ import Label from '@/_components/_form/label'
 import Select from '@/_components/_form/select'
 import Button from '@/_components/button'
 import Table from '@/_components/table'
-import { findGenByVerGroup, findNameByLanguage } from '@/_util/find'
+import { calcHeightInMeters, calcWeightInKilograms } from '@/_util/calc'
+import { findGenByVerGroup, findGenFullName, findNameByLanguage } from '@/_util/find'
 import Pokedex from 'pokedex-promise-v2'
 import { useEffect, useState } from 'react'
 
@@ -68,7 +69,7 @@ export default function Home() {
 		}
 	}
 
-	const [filterTypes, setFilterTypes] = useState({
+	const [fTypes, setFTypes] = useState({
 		unknown: true,
 		bug: true,
 		dark: true,
@@ -90,8 +91,8 @@ export default function Home() {
 		steel: true,
 		water: true,
 	})
-	const [filterTypesIndex, setFilterTypesIndex] = useState(0)
-	const [filterGen, setFilterGen] = useState({
+	const [fTypesIndex, setFTypesIndex] = useState(0)
+	const [fGen, setFGen] = useState({
 		gen1: true,
 		gen2: true,
 		gen3: true,
@@ -103,61 +104,124 @@ export default function Home() {
 		gen9: true,
 		gen10: true,
 	})
+	const [fHeight, setFHeight] = useState([0, 0])
+	const [fHOperator, setFHOperator] = useState('greater')
+	const [fHUnit, setFHUnit] = useState('meters')
+	const [fWeight, setFWeight] = useState([0, 0])
+	const [fWOperator, setFWOperator] = useState('greater')
+	const [fWUnit, setFWUnit] = useState('kilograms')
 
-	const handleAllFilterChange = (e: any, action: 'select' | 'clear', filter: 'filterTypes' | 'filterGen') => {
+	const handleAllFilterChange = (e: any, action: 'select' | 'clear', filter: 'fTypes' | 'fGen') => {
 		e.preventDefault()
 		if (action === 'select') {
 			const newFilter = Object.fromEntries(
-				Object.keys(filter === 'filterTypes' ? filterTypes : filterGen).map(key => [key, true])
+				Object.keys(filter === 'fTypes' ? fTypes : fGen).map(key => [key, true])
 			)
-			filter === 'filterTypes' ? setFilterTypes(newFilter as typeof filterTypes) : setFilterGen(newFilter as typeof filterGen)
+			filter === 'fTypes' ? setFTypes(newFilter as typeof fTypes) : setFGen(newFilter as typeof fGen)
 		}
 
 		if (action === 'clear') {
 			const newFilter = Object.fromEntries(
-				Object.keys(filter === 'filterTypes' ? filterTypes : filterGen).map(key => [key, false])
+				Object.keys(filter === 'fTypes' ? fTypes : fGen).map(key => [key, false])
 			)
-			filter === 'filterTypes' ? setFilterTypes(newFilter as typeof filterTypes) : setFilterGen(newFilter as typeof filterGen)
+			filter === 'fTypes' ? setFTypes(newFilter as typeof fTypes) : setFGen(newFilter as typeof fGen)
 		}
 	}
 
 	const handleFilterTypesChange = (e: any) => {
 		const type = e.target.name
 		if (e.target.checked) {
-			setFilterTypes({...filterTypes, [type]: true})
+			setFTypes({...fTypes, [type]: true})
 		} else {
-			setFilterTypes({...filterTypes, [type]: false})
+			setFTypes({...fTypes, [type]: false})
 		}
 	}
 
 	const handleFilterTypesIndexChange = (e:any, index: number) => {
 		e.preventDefault()
-		setFilterTypesIndex(index)
+		setFTypesIndex(index)
 	}
 
 	const handleFilterGenChange = (e: any) => {
 		const gen = e.target.name
 		if (e.target.checked) {
-			setFilterGen({...filterGen, [gen]: true})
+			setFGen({...fGen, [gen]: true})
 		} else {
-			setFilterGen({...filterGen, [gen]: false})
+			setFGen({...fGen, [gen]: false})
 		}
+	}
+
+	const handleFHChange = (e:any, index:number) => {
+		const newH = e.target.value
+		
+		const h = fHeight.map((h, i) => {
+			if (i === index) {
+				return newH
+			} else {
+				return h
+			}
+		})
+
+		setFHeight(h)
+	}
+
+	const handleFWChange = (e:any, index:number) => {
+		const newW = e.target.value
+		
+		const w = fWeight.map((w, i) => {
+			if (i === index) {
+				return newW
+			} else {
+				return w
+			}
+		})
+
+		setFWeight(w)
 	}
 
 	const handleSubmit = () => {
 		const filtered = allPokemon.filter(p => {
 			const types = p.types
-			const selectedTypes = Object.entries(filterTypes)
+			const selectedTypes = Object.entries(fTypes)
 				.filter(([k,v]) => v).map(([k]) => k)
 			return selectedTypes.some(t => types.includes(t))
 		})
 		.filter(p => {
 			const gen = p.generation
-			const selectedGens = Object.entries(filterGen)
+			const selectedGens = Object.entries(fGen)
 				.filter(([k, v]) => v)
 				.map(([k]) => Number(k.replace('gen', '')))
-				console.log(selectedGens)
 			return selectedGens.includes(gen)
+		})
+		.filter(p => {
+			let calcH = 0
+
+			if (fHUnit === 'meters') calcH = calcHeightInMeters(p.height)
+			if (fHUnit === 'feet') calcH = p.height //TODO: fix calc to feet
+
+			if (fHOperator === 'greater') return calcH >= fHeight[0]
+			if (fHOperator === 'equal') return calcH == fHeight[0]
+			if (fHOperator === 'less') return calcH <= fHeight[0]
+			if (fHOperator === 'between') {
+				const min = Math.min(fHeight[0], fHeight[1])
+				const max = Math.max(fHeight[0], fHeight[1])
+				return calcH >= min && calcH <= max
+			}
+		})
+		.filter(p => {
+			let calcW = 0
+
+			if (fWUnit === 'kilograms') calcW = calcWeightInKilograms(p.weight)
+			if (fWUnit === 'pounds') calcW = p.weight //TODO: fix calc to pounds
+
+			if (fWOperator === 'greater') return calcW >= fWeight[0]
+			if (fWOperator === 'equal') return calcW == fWeight[0]
+			if (fWOperator === 'less') return calcW <= fWeight[0]
+			if (fWOperator === 'between') {
+				const min = Math.min(fWeight[0], fWeight[1])
+				const max = Math.max(fWeight[0], fWeight[1])
+				return calcW >= min && calcW <= max
+			}
 		})
 
 		setFilteredPokemon(filtered)
@@ -172,6 +236,7 @@ export default function Home() {
 	return (
 		<main>
 			<h1 className="text-5xl my-10 mx-5 text-center font-black uppercase tracking-widest">Pokedex Search</h1>
+
 			<form onSubmit={e => e.preventDefault()} className="bg-white p-10 rounded-lg shadow-lg max-w-4xl mx-auto mb-10">
 				{/* <div className={formSection}>
 					<div>
@@ -377,24 +442,24 @@ export default function Home() {
 					<div className="col-span-3">
 						<div className={formRow}>
 							<div className="flex gap-2 mb-4">
-								<Button onClick={e => handleFilterTypesIndexChange(e, 0)} size="sm" variant={filterTypesIndex === 0 ? "filled" : "outline"}>Any</Button>
-								<Button onClick={e => handleFilterTypesIndexChange(e, 1)} size="sm" variant={filterTypesIndex === 1 ? "filled" : "outline"}>Single Type</Button>
-								<Button onClick={e => handleFilterTypesIndexChange(e, 2)} size="sm" variant={filterTypesIndex === 2 ? "filled" : "outline"}>Dual Type</Button>
+								<Button onClick={e => handleFilterTypesIndexChange(e, 0)} size="sm" variant={fTypesIndex === 0 ? "filled" : "outline"}>Any</Button>
+								<Button onClick={e => handleFilterTypesIndexChange(e, 1)} size="sm" variant={fTypesIndex === 1 ? "filled" : "outline"}>Single Type</Button>
+								<Button onClick={e => handleFilterTypesIndexChange(e, 2)} size="sm" variant={fTypesIndex === 2 ? "filled" : "outline"}>Dual Type</Button>
 							</div>
 
 							<fieldset className={formChecks}>
-								{Object.entries(filterTypes).map(([t, v], i) => (
+								{Object.entries(fTypes).map(([k, v], i) => (
 									<div key={i} className="flex">
-										<InputCheck name={t} onChange={handleFilterTypesChange} checked={v} />
-										<Label htmlFor={t} text={t.charAt(0).toUpperCase() + t.slice(1)} />
+										<InputCheck name={k} onChange={handleFilterTypesChange} checked={v} />
+										<Label htmlFor={k} text={k.charAt(0).toUpperCase() + k.slice(1)} />
 									</div>
 								))}
 							</fieldset>
 						</div>
 
 						<div className="flex gap-2 mt-4">
-							<Button size="sm" onClick={e => handleAllFilterChange(e, 'select', 'filterTypes')} >Select All</Button>
-							<Button size="sm" onClick={e => handleAllFilterChange(e, 'clear', 'filterTypes')} >Clear All</Button>
+							<Button size="sm" onClick={e => handleAllFilterChange(e, 'select', 'fTypes')} >Select All</Button>
+							<Button size="sm" onClick={e => handleAllFilterChange(e, 'clear', 'fTypes')} >Clear All</Button>
 						</div>
 					</div>
 				</div>
@@ -407,57 +472,23 @@ export default function Home() {
 						<div className={formRow}>
 							<h3 className={formH3}>Introduced in</h3>
 							<fieldset>
-								<div className="flex">
-									<InputCheck name="gen1" onChange={handleFilterGenChange} checked={filterGen.gen1} />
-									<Label htmlFor="gen1" text="Generation I" />
-								</div>
-								<div className="flex">
-									<InputCheck name="gen2" onChange={handleFilterGenChange} checked={filterGen.gen2} />
-									<Label htmlFor="gen2" text="Generation II" />
-								</div>
-								<div className="flex">
-									<InputCheck name="gen3" onChange={handleFilterGenChange} checked={filterGen.gen3} />
-									<Label htmlFor="gen3" text="Generation III" />
-								</div>
-								<div className="flex">
-									<InputCheck name="gen4" onChange={handleFilterGenChange} checked={filterGen.gen4} />
-									<Label htmlFor="gen4" text="Generation IV" />
-								</div>
-								<div className="flex">
-									<InputCheck name="gen5" onChange={handleFilterGenChange} checked={filterGen.gen5} />
-									<Label htmlFor="gen5" text="Generation V" />
-								</div>
-								<div className="flex">
-									<InputCheck name="gen6" onChange={handleFilterGenChange} checked={filterGen.gen6} />
-									<Label htmlFor="gen6" text="Generation VI" />
-								</div>
-								<div className="flex">
-									<InputCheck name="gen7" onChange={handleFilterGenChange} checked={filterGen.gen7} />
-									<Label htmlFor="gen7" text="Generation VII" />
-								</div>
-								<div className="flex">
-									<InputCheck name="gen8" onChange={handleFilterGenChange} checked={filterGen.gen8} />
-									<Label htmlFor="gen8" text="Generation VIII" />
-								</div>
-								<div className="flex">
-									<InputCheck name="gen9" onChange={handleFilterGenChange} checked={filterGen.gen9} />
-									<Label htmlFor="gen9" text="Generation IX" />
-								</div>
-								<div className="flex">
-									<InputCheck name="gen10" onChange={handleFilterGenChange} checked={filterGen.gen10} />
-									<Label htmlFor="gen10" text="Generation X" />
-								</div>
+								{Object.entries(fGen).map(([k,v], i) => (
+									<div key={i} className="flex">
+										<InputCheck name={k} onChange={handleFilterGenChange} checked={fGen[k]} />
+										<Label htmlFor={k} text={findGenFullName(parseInt(k.slice(3)))} />
+									</div>
+								))}
 							</fieldset>
 						</div>
 
 						<div className="flex gap-2 mt-4">
-							<Button size="sm" onClick={e => handleAllFilterChange(e, 'select', 'filterGen')} >Select All</Button>
-							<Button size="sm" onClick={e => handleAllFilterChange(e, 'clear', 'filterGen')} >Clear All</Button>
+							<Button size="sm" onClick={e => handleAllFilterChange(e, 'select', 'fGen')} >Select All</Button>
+							<Button size="sm" onClick={e => handleAllFilterChange(e, 'clear', 'fGen')} >Clear All</Button>
 						</div>
 					</div>
 				</div>
 
-				{/* <div className={formSection}>
+				<div className={formSection}>
 					<div>
 						<h2 className={formH2}>Stats</h2>
 					</div>
@@ -469,23 +500,27 @@ export default function Home() {
 							<div className="flex items-center">
 								<Select
 									name="heightOperator"
-									defaultValue="greater-than"
+									value={fHOperator}
+									onChange={(e:any) => setFHOperator(e.target.value)}
 									options={[
-										{ value: 'greater-than', label: '≥' },
+										{ value: 'greater', label: '≥' },
 										{ value: 'equal', label: '=' },
-										{ value: 'less-than', label: '≤' },
+										{ value: 'less', label: '≤' },
 										{ value: 'between', label: 'between' },
 									]}
 								/>
-								<InputNumber name="heightValue1" min={0} defaultValue={0} />
-								<span>&amp;</span>
-								<InputNumber name="heightValue2" min={0} defaultValue={0} />
+								<InputNumber name="heightValue1" min={0} value={fHeight[0]} onChange={(e:any) => handleFHChange(e, 0)} step="0.01" />
+								<div className={ fHOperator == 'between' ? 'visible flex items-center' : 'hidden' }>
+									<span>&ndash;</span>
+									<InputNumber name="heightValue2" min={0} value={fHeight[1]} onChange={(e:any) => handleFHChange(e, 1)} step="0.01" />
+								</div>
 								<Select
 									name="heightUnit"
-									defaultValue="meter"
+									value={fHUnit}
+									onChange={(e:any) => setFHUnit(e.target.value)}
 									options={[
 										{ value: 'meters', label: 'm' },
-										{ value: 'feet', label: 'ft' },
+										{ value: 'feet', label: 'ft', disabled: true },
 									]}
 								/>
 							</div>
@@ -496,31 +531,37 @@ export default function Home() {
 							<div className="flex items-center">
 								<Select
 									name="weightOperator"
-									defaultValue="greater-than"
+									value={fWOperator}
+									onChange={(e:any) => setFWOperator(e.target.value)}
 									options={[
-										{ value: 'greater-than', label: '≥' },
+										{ value: 'greater', label: '≥' },
 										{ value: 'equal', label: '=' },
-										{ value: 'less-than', label: '≤' },
+										{ value: 'less', label: '≤' },
 										{ value: 'between', label: 'between' },
 									]}
 								/>
-								<InputNumber name="weightValue1" min={0} defaultValue={0} />
-								<span>&amp;</span>
-								<InputNumber name="weightValue2" min={0} defaultValue={0} />
+								<InputNumber name="weightValue1" min={0} value={fWeight[0]} onChange={(e:any) => handleFWChange(e, 0)} step="0.01" />
+								<div className={ fWOperator == 'between' ? 'visible flex items-center' : 'hidden' }>
+									<span>&ndash;</span>
+									<InputNumber name="weightValue2" min={0} value={fWeight[1]} onChange={(e:any) => handleFWChange(e, 1)} step="0.01" />
+								</div>
 								<Select
 									name="weightUnit"
-									defaultValue="kilograms"
+									value={fWUnit}
+									onChange={(e:any) => setFWUnit(e.target.value)}
 									options={[
 										{ value: 'kilograms', label: 'kg' },
-										{ value: 'pounds', label: 'lb' },
+										{ value: 'pounds', label: 'lb', disabled: true },
 									]}
 								/>
 							</div>
 						</div>
 					</div>
-				</div> */}
+				</div>
 
-				<Button size="lg" onClick={handleSubmit} disabled={!pokemonLoaded}>Filter & Search</Button>
+				<Button size="lg" onClick={handleSubmit} disabled={!pokemonLoaded}>
+					{pokemonLoaded ? "Filter & Search" : "Loading"}
+				</Button>
 			</form>
 
 			{filteredPokemon && <Table filteredPokemon={filteredPokemon} />}
