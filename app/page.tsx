@@ -126,7 +126,7 @@ export default function Home() {
 		}
 	}
 
-	const handleFilterTypesChange = (e: any) => {
+	const handleFTypesChange = (e: any) => {
 		const type = e.target.name
 		if (e.target.checked) {
 			setFTypes({...fTypes, [type]: true})
@@ -135,12 +135,12 @@ export default function Home() {
 		}
 	}
 
-	const handleFilterTypesIndexChange = (e:any, index: number) => {
+	const handleFTypesIndexChange = (e:any, index: number) => {
 		e.preventDefault()
 		setFTypesIndex(index)
 	}
 
-	const handleFilterGenChange = (e: any) => {
+	const handleFGenChange = (e: any) => {
 		const gen = e.target.name
 		if (e.target.checked) {
 			setFGen({...fGen, [gen]: true})
@@ -179,10 +179,22 @@ export default function Home() {
 
 	const handleSubmit = () => {
 		const filtered = allPokemon.filter(p => {
-			const types = p.types
 			const selectedTypes = Object.entries(fTypes)
 				.filter(([k,v]) => v).map(([k]) => k)
-			return types.every((t:any) => selectedTypes.includes(t))
+
+			switch (fTypesIndex) {
+				case 1:
+					if (p.types.length === 1) return p.types.every((t:any) => selectedTypes.includes(t))
+					else return false
+				case 2:
+					if (p.types.length === 2) {
+						if (selectedTypes.length > 1) return p.types.every(t => selectedTypes.includes(t))
+						else return selectedTypes.some(t => p.types.includes(t))
+					}
+					else return false
+				default:
+					return p.types.every((t:any) => selectedTypes.includes(t))
+			}
 		})
 		.filter(p => {
 			const gen = p.generation
@@ -440,15 +452,15 @@ export default function Home() {
 					<div className="col-span-3">
 						<div className={formRow}>
 							<div className="flex gap-2 mb-4">
-								<Button onClick={e => handleFilterTypesIndexChange(e, 0)} size="sm" variant={fTypesIndex === 0 ? "filled" : "outline"}>Any</Button>
-								<Button onClick={e => handleFilterTypesIndexChange(e, 1)} size="sm" variant={fTypesIndex === 1 ? "filled" : "outline"}>Single Type</Button>
-								<Button onClick={e => handleFilterTypesIndexChange(e, 2)} size="sm" variant={fTypesIndex === 2 ? "filled" : "outline"}>Dual Type</Button>
+								<Button onClick={e => handleFTypesIndexChange(e, 0)} size="sm" variant={fTypesIndex === 0 ? "filled" : "outline"}>Any</Button>
+								<Button onClick={e => handleFTypesIndexChange(e, 1)} size="sm" variant={fTypesIndex === 1 ? "filled" : "outline"}>Single Type</Button>
+								<Button onClick={e => handleFTypesIndexChange(e, 2)} size="sm" variant={fTypesIndex === 2 ? "filled" : "outline"}>Dual Type</Button>
 							</div>
 
 							<fieldset className={formChecks}>
 								{Object.entries(fTypes).map(([k, v], i) => (
 									<div key={i} className="flex">
-										<InputCheck name={k} onChange={handleFilterTypesChange} checked={v} />
+										<InputCheck name={k} onChange={handleFTypesChange} checked={v} />
 										<Label htmlFor={k} text={k.charAt(0).toUpperCase() + k.slice(1)} />
 									</div>
 								))}
@@ -472,7 +484,7 @@ export default function Home() {
 							<fieldset>
 								{Object.entries(fGen).map(([k,v], i) => (
 									<div key={i} className="flex">
-										<InputCheck name={k} onChange={handleFilterGenChange} checked={fGen[k]} />
+										<InputCheck name={k} onChange={handleFGenChange} checked={fGen[k]} />
 										<Label htmlFor={k} text={findGenFullName(parseInt(k.slice(3)))} />
 									</div>
 								))}
