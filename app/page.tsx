@@ -15,20 +15,48 @@ import { useEffect, useState } from 'react'
 const P = new Pokedex()
 
 export default function Home() {
+	const [isLS, setIsLS] = useState(true)
 	const [offset, setOffset] = useState(0)
 	const [pokemonLoaded, setPokemonLoaded] = useState(false)
 	const [allPokemon, setAllPokemon] = useState<any[]>([])
 	const [filteredPokemon, setFilteredPokemon] = useState<any[]>([])
+
+	// console.log(allPokemon)
+
+	useEffect(() => {
+		const ls:any = localStorage.getItem('pokemon')
+		const lsTimeout:any = localStorage.getItem('cache-timeout')
+
+		if (!ls || !lsTimeout) setIsLS(false)
+		else {
+			const poke = JSON.parse(ls)
+			const timeout = Date.parse(lsTimeout)
+			const isTimeout = new Date().getTime() >= timeout
+
+			if (isTimeout) setIsLS(false)
+			else {
+				setPokemonLoaded(true)
+				setAllPokemon(poke)
+			}
+		}
+	}, [])
 	
 	useEffect(() => {
-		getAllPokemon()
-	}, [offset])
+		!pokemonLoaded && !isLS && getAllPokemon()
+
+		if (pokemonLoaded && offset !== 0) {
+			const timeout = new Date()
+			timeout.setDate(timeout.getDate() + 6)
+
+			localStorage.setItem('pokemon', JSON.stringify([...allPokemon]))
+			localStorage.setItem('cache-timeout', timeout.toString())
+		}
+	}, [isLS, offset, pokemonLoaded])
 
 	useEffect(() => {
 		const sorted = filteredPokemon.sort((a, b) => a.id - b.id)
 		setFilteredPokemon(sorted)
 	}, [filteredPokemon])
-	
 
 	const getAllPokemon = async () => {
 		try {

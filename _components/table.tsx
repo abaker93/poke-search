@@ -1,32 +1,34 @@
 import { calcHeightInMeters, calcWeightInKilograms } from "@/_util/calc"
-import { findGenFullName, findNameByLanguage } from "@/_util/find"
+import { findGenFullName } from "@/_util/find"
 import Image from "next/image"
-import { useEffect, useState } from "react"
 
 import Pokedex from 'pokedex-promise-v2'
+import Button from "./button"
+import { ReactNode, useState } from "react"
+import { ArrowDown, ArrowUp } from "@/_util/_icons/arrows"
 
 const P = new Pokedex()
 
 const Table = ({ filteredPokemon }: { filteredPokemon: any[] }) => {
-	// console.log('filteredPokemon')
+	const [sortIndex, setSortIndex] = useState(1)
 
 	if (filteredPokemon.length === 0) {
 		return (
-			<div className="bg-slate-100 mb-5 p-5 text-lg font-bold text-indigo-800">
+			<SearchResults>
 				No Pokémon found
-			</div>
+			</SearchResults>
 		)
 	}
 
 	return (
 		<>
-			<div className="bg-slate-100 mb-5 p-5 text-lg font-bold text-indigo-800">
+			<SearchResults>
 				{filteredPokemon.length} Pokémon found
-			</div>
+			</SearchResults>
 
-			<table className="w-full text-center">
+			<table className="w-full">
 				<thead>
-					<tr>
+					<tr className="*:bg-indigo-700/75 *:text-white *:py-3 *:sticky *:top-[68px] *:backdrop-blur-xs *:border-b-2 *:border-indigo-700">
 						<th>Name</th>
 						<th>Type</th>
 						<th>Generation</th>
@@ -44,28 +46,52 @@ const Table = ({ filteredPokemon }: { filteredPokemon: any[] }) => {
 	)
 }
 
+const SearchResults = ({ children }: { children: ReactNode | string }) => {
+	return (
+		<div className="flex justify-between bg-slate-100 mb-5 p-5 text-lg font-bold text-indigo-800 sticky top-0">
+			<div>
+				{children}
+			</div>
+			<div className="gap-2 flex">
+				<Button color="muted" size="sm" variant="outline">
+					<div className="flex items-center gap-0.5">
+						Name
+						<ArrowDown className="size-3" />
+					</div>
+				</Button>
+				<Button color="muted" size="sm" variant="outline">
+					<div className="flex items-center gap-0.5">
+						Num
+						<ArrowDown className="size-3" />
+					</div>
+				</Button>
+				{/* <Button color="muted" size="sm" variant="outline">
+					<div className="flex items-center gap-0.5">
+						Type
+						<ArrowDown className="size-3" />
+					</div>
+				</Button> */}
+				<Button color="muted" size="sm" variant="outline">
+					<div className="flex items-center gap-0.5">
+						Gen
+						<ArrowDown className="size-3" /></div>
+				</Button>
+				<Button color="muted" size="sm" variant="outline">
+					<div className="flex items-center gap-0.5">
+						Height
+						<ArrowDown className="size-3" /></div>
+				</Button>
+				<Button color="muted" size="sm" variant="outline">
+					<div className="flex items-center gap-0.5">
+						Weight
+						<ArrowDown className="size-3" /></div>
+				</Button>
+			</div>
+		</div>
+	)
+}
+
 const TableRow = ({ p }: { p: any }) => {
-	// console.log(p)
-
-	// const [gen, setGen] = useState('')
-
-	// const getGenerationByURL = async (url: string) => {
-	// 	try {
-	// 		const data = await P.getResource(url);
-	// 		return findNameByLanguage(data.names, 'en')
-	// 	} catch (e) {
-	// 		console.error(e)
-	// 	}
-	// }
-
-	// useEffect(() => {
-	// 	const fetchGen = async () => {
-	// 		const genName = await getGenerationByURL(p.generation.url)
-	// 		setGen(genName)
-	// 	}
-	// 	fetchGen()
-	// }, [p.generation.url])
-
 	return (
 		<tr className="hover:bg-slate-100">
 			<td>
