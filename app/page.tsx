@@ -70,7 +70,6 @@ export default function Home() {
 	}
 
 	const [fTypes, setFTypes] = useState({
-		unknown: true,
 		bug: true,
 		dark: true,
 		dragon: true,
@@ -87,7 +86,6 @@ export default function Home() {
 		poison: true,
 		psychic: true,
 		rock: true,
-		shadow: true,
 		steel: true,
 		water: true,
 	})
@@ -184,7 +182,7 @@ export default function Home() {
 			const types = p.types
 			const selectedTypes = Object.entries(fTypes)
 				.filter(([k,v]) => v).map(([k]) => k)
-			return selectedTypes.some(t => types.includes(t))
+			return types.every((t:any) => selectedTypes.includes(t))
 		})
 		.filter(p => {
 			const gen = p.generation
