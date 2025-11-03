@@ -17,11 +17,11 @@ const Button = ({
 	const colors = {
 		'muted': {
 			'filled': 'border border-slate-500 bg-slate-500 hover:bg-slate-700 hover:border-slate-700 focus:ring-slate-300 text-white disabled:bg-slate-100 disabled:border-slate-100 disabled:cursor-not-allowed',
-			'outline': 'border border-slate-500 text-slate-500 hover:bg-slate-500 hover:border-slate-500 focus:ring-slate-300',
+			'outline': 'border border-slate-500 text-slate-500 hover:bg-slate-500 hover:text-slate-50 hover:border-slate-500 focus:ring-slate-300 disabled:border-slate-300 disabled:text-slate-300 disabled:cursor-not-allowed disabled:hover:bg-transparent',
 		},
 		'primary': {
 			'filled': 'border border-indigo-700 bg-indigo-700 hover:bg-indigo-900 hover:border-indigo-900 focus:ring-indigo-300 text-white disabled:bg-indigo-200 disabled:border-indigo-200 disabled:cursor-not-allowed',
-			'outline': 'border border-indigo-700 text-indigo-700 hover:bg-indigo-700 hover:border-indigo-700 hover:text-white focus:ring-indigo-300',
+			'outline': 'border border-indigo-700 text-indigo-700 hover:bg-indigo-700 hover:border-indigo-700 hover:text-white focus:ring-indigo-300 disabled:border-indigo-200 disabled:cursor-not-allowed',
 		},
 	}
 

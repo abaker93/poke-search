@@ -53,10 +53,10 @@ export default function Home() {
 		}
 	}, [isLS, offset, pokemonLoaded])
 
-	useEffect(() => {
-		const sorted = filteredPokemon.sort((a, b) => a.id - b.id)
-		setFilteredPokemon(sorted)
-	}, [filteredPokemon])
+	// useEffect(() => {
+	// 	const sorted = filteredPokemon.sort((a, b) => a.id - b.id)
+	// 	setFilteredPokemon(sorted)
+	// }, [filteredPokemon])
 
 	const getAllPokemon = async () => {
 		try {
@@ -83,6 +83,7 @@ export default function Home() {
 			const name = findNameByLanguage(species.names)
 
 			return {
+				dex: species.pokedex_numbers.find((f:any) => f.pokedex.name === 'national').entry_number,
 				generation: generation,
 				height: poke.height,
 				id: poke.id,
@@ -547,10 +548,10 @@ export default function Home() {
 										{ value: 'between', label: 'between' },
 									]}
 								/>
-								<InputNumber name="heightValue1" min={0} value={fHeight[0]} onChange={(e:any) => handleFHChange(e, 0)} step="0.01" />
+								<InputNumber name="heightValue1" min={0} value={fHeight[0]} onChange={(e:any) => handleFHChange(e, 0)} step="0.1" />
 								<div className={ fHOperator == 'between' ? 'visible flex items-center' : 'hidden' }>
 									<span>&ndash;</span>
-									<InputNumber name="heightValue2" min={0} value={fHeight[1]} onChange={(e:any) => handleFHChange(e, 1)} step="0.01" />
+									<InputNumber name="heightValue2" min={0} value={fHeight[1]} onChange={(e:any) => handleFHChange(e, 1)} step="0.1" />
 								</div>
 								<Select
 									name="heightUnit"
@@ -578,10 +579,10 @@ export default function Home() {
 										{ value: 'between', label: 'between' },
 									]}
 								/>
-								<InputNumber name="weightValue1" min={0} value={fWeight[0]} onChange={(e:any) => handleFWChange(e, 0)} step="0.01" />
+								<InputNumber name="weightValue1" min={0} value={fWeight[0]} onChange={(e:any) => handleFWChange(e, 0)} step="0.1" />
 								<div className={ fWOperator == 'between' ? 'visible flex items-center' : 'hidden' }>
 									<span>&ndash;</span>
-									<InputNumber name="weightValue2" min={0} value={fWeight[1]} onChange={(e:any) => handleFWChange(e, 1)} step="0.01" />
+									<InputNumber name="weightValue2" min={0} value={fWeight[1]} onChange={(e:any) => handleFWChange(e, 1)} step="0.1" />
 								</div>
 								<Select
 									name="weightUnit"
