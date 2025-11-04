@@ -213,16 +213,16 @@ export default function Home() {
 
 			switch (fTypesIndex) {
 				case 1:
-					if (p.types.length === 1) return p.types.every((t:any) => selectedTypes.includes(t))
+					if (p.types.length === 1) return p.types.every((t:string) => selectedTypes.includes(t))
 					else return false
 				case 2:
 					if (p.types.length === 2) {
-						if (selectedTypes.length > 1) return p.types.every(t => selectedTypes.includes(t))
+						if (selectedTypes.length > 1) return p.types.every((t:string) => selectedTypes.includes(t))
 						else return selectedTypes.some(t => p.types.includes(t))
 					}
 					else return false
 				default:
-					return p.types.every((t:any) => selectedTypes.includes(t))
+					return p.types.every((t:string) => selectedTypes.includes(t))
 			}
 		})
 		.filter(p => {
@@ -277,203 +277,6 @@ export default function Home() {
 			<h1 className="text-5xl my-10 mx-5 text-center font-black uppercase tracking-widest">Pokedex Search</h1>
 
 			<form onSubmit={e => e.preventDefault()} className="bg-white p-10 rounded-lg shadow-lg max-w-4xl mx-auto mb-10">
-				{/* <div className={formSection}>
-					<div>
-						<h2 className={formH2}>Basics</h2>
-					</div>
-					<div className="col-span-3">
-						<div className={formRow}>
-							<Label htmlFor="name" text="Name:" />
-							<InputText name="name" disabled />
-						</div>
-
-						<div className={formRow}>
-							<Label htmlFor="ability" text="Ability:" />
-							<InputText name="ability" disabled />
-						</div>
-
-						<div className={formRow}>
-							<Label htmlFor="heldItem" text="Held Item:" />
-							<InputText name="heldItem" disabled />
-						</div>
-
-						<div className={formRow}>
-							<Label htmlFor="growthRate" text="Growth Rate:" />
-							<Select
-								name="growthRate"
-								options={[
-									{ value: 'blank', label: '' },
-									{ value: 'slow', label: 'Slow' },
-									{ value: 'medium', label: 'Medium' },
-									{ value: 'fast', label: 'Fast' },
-									{ value: 'medium-slow', label: 'Medium Slow' },
-									{ value: 'slow-then-very-fast', label: 'Slow then Very Fast' },
-									{ value: 'fast-then-very-slow', label: 'Fast then Very Slow' },
-								]}
-								disabled
-							/>
-						</div>
-						
-						<div className={formRow}>
-							<Label htmlFor="genderOperator" text="Gender:" />
-							<div className="flex items-center">
-								<Select
-									name="genderOperator"
-									defaultValue="equal"
-									options={[
-										{ value: 'never', label: 'never' },
-										{ value: 'greater-than', label: '≥' },
-										{ value: 'equal', label: '=' },
-										{ value: 'less-than', label: '≤' },
-									]}
-									disabled
-								/>
-								<InputNumber name="genderValue" min={0} max={100} defaultValue={50} disabled />
-								<div className="flex flex-col">
-									<span className="ms-1">Female</span>
-									<span className="text-slate-400 text-xs ps-1">(50% Male)</span>
-								</div>
-							</div>
-						</div>
-						
-						<div className={formRow}>
-							<Label htmlFor="eggGroup" text="Egg Group:" />
-							<div className="flex items-center">
-								<Select
-									name="eggGroup"
-									options={[
-										{ value: 'blank', label: '' },
-										{ value: 'amorphous', label: 'Amorphous' },
-										{ value: 'bug', label: 'Bug' },
-										{ value: 'ditto', label: 'Ditto' },
-										{ value: 'dragon', label: 'Dragon' },
-										{ value: 'flying', label: 'Flying' },
-										{ value: 'field', label: 'Field' },
-										{ value: 'fairy', label: 'Fairy' },
-										{ value: 'grass', label: 'Grass' },
-										{ value: 'human-like', label: 'Human-Like' },
-										{ value: 'mineral', label: 'Mineral' },
-										{ value: 'monster', label: 'Monster' },
-										{ value: 'undiscovered', label: 'Undiscovered' },
-										{ value: 'water1', label: 'Water 1' },
-										{ value: 'water1', label: 'Water 2' },
-										{ value: 'water3', label: 'Water 3' },
-									]}
-									disabled
-								/>
-								<Select
-									name="eggGroupOperator"
-									options={[
-										{ value: 'or', label: 'or' },
-										{ value: 'and', label: 'and' },
-									]}
-									disabled
-								/>
-								<Select
-									name="eggGroup2"
-									options={[
-										{ value: 'blank', label: '' },
-										{ value: 'amorphous', label: 'Amorphous' },
-										{ value: 'bug', label: 'Bug' },
-										{ value: 'ditto', label: 'Ditto' },
-										{ value: 'dragon', label: 'Dragon' },
-										{ value: 'flying', label: 'Flying' },
-										{ value: 'field', label: 'Field' },
-										{ value: 'fairy', label: 'Fairy' },
-										{ value: 'grass', label: 'Grass' },
-										{ value: 'human-like', label: 'Human-Like' },
-										{ value: 'mineral', label: 'Mineral' },
-										{ value: 'monster', label: 'Monster' },
-										{ value: 'undiscovered', label: 'Undiscovered' },
-										{ value: 'water1', label: 'Water 1' },
-										{ value: 'water1', label: 'Water 2' },
-										{ value: 'water3', label: 'Water 3' },
-									]}
-									disabled
-								/>
-							</div>
-						</div>
-					</div>
-				</div> */}
-
-				{/* <div className={formSection}>
-					<div>
-						<h2 className={formH2}>Details</h2>
-					</div>
-					<div className="col-span-3">
-						<div className={formRow}>
-							<Label htmlFor="species" text="Species:" />
-							<InputText name="species" disabled />
-						</div>
-
-						<div className={formRow}>
-							<Label htmlFor="color" text="Color:" />
-							<Select
-								name="color"
-								options={[
-									{ value: 'blank', label: '' },
-									{ value: 'black', label: 'Black' },
-									{ value: 'blue', label: 'Blue' },
-									{ value: 'brown', label: 'Brown' },
-									{ value: 'gray', label: 'Gray' },
-									{ value: 'green', label: 'Green' },
-									{ value: 'pink', label: 'Pink' },
-									{ value: 'purple', label: 'Purple' },
-									{ value: 'red', label: 'Red' },
-									{ value: 'white', label: 'White' },
-									{ value: 'yellow', label: 'Yellow' },
-								]}
-								disabled
-							/>
-						</div>
-
-						<div className={formRow}>
-							<Label htmlFor="habitat" text="Habitat:" />
-							<Select
-								name="habitat"
-								options={[
-									{ value: 'blank', label: '' },
-									{ value: 'cave', label: 'Cave' },
-									{ value: 'forest', label: 'Forest' },
-									{ value: 'grassland', label: 'Grassland' },
-									{ value: 'mountain', label: 'Mountain' },
-									{ value: 'rare', label: 'Rare' },
-									{ value: 'rough-terrain', label: 'Rough Terrain' },
-									{ value: 'sea', label: 'Sea' },
-									{ value: 'urban', label: 'Urban' },
-									{ value: 'waters-edge', label: 'Waters Edge' },
-								]}
-								disabled
-							/>
-						</div>
-
-						<div className={formRow}>
-							<Label htmlFor="shape" text="Shape:" />
-							<Select
-								name="shape"
-								options={[
-									{ value: 'blank', label: '' },
-									{ value: 'armor', label: '' },
-									{ value: 'arms', label: '' },
-									{ value: 'ball', label: '' },
-									{ value: 'blob', label: '' },
-									{ value: 'bug-wings', label: '' },
-									{ value: 'fish', label: '' },
-									{ value: 'heads', label: '' },
-									{ value: 'humanoid', label: '' },
-									{ value: 'legs', label: '' },
-									{ value: 'quadruped', label: '' },
-									{ value: 'squiggle', label: '' },
-									{ value: 'tentacles', label: '' },
-									{ value: 'upright', label: '' },
-									{ value: 'wings', label: '' },
-								]}
-								disabled
-							/>
-						</div>
-					</div>
-				</div> */}
-
 				<div className={formSection}>
 					<div>
 						<h2 className={formH2}>Types</h2>
@@ -513,7 +316,7 @@ export default function Home() {
 							<fieldset>
 								{Object.entries(fGen).map(([k,v], i) => (
 									<div key={i} className="flex">
-										<InputCheck name={k} onChange={handleFGenChange} checked={fGen[k]} />
+										<InputCheck name={k} onChange={handleFGenChange} checked={v} />
 										<Label htmlFor={k} text={findGenFullName(parseInt(k.slice(3)))} />
 									</div>
 								))}
