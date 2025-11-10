@@ -5,19 +5,31 @@
   --foreground: #171717;
 }
 
+@theme {
+  --color-type-bug: #91A219;
+	--color-type-dark: #624D4F;
+	--color-type-dragon: #505FE1;
+	--color-type-electric: #FAC001;
+	--color-type-fairy: #EF71EF;
+	--color-type-fighting: #FF8001;
+  --color-type-fire: #E62829;
+  --color-type-flying: #81BAF0;
+  --color-type-ghost: #714171;
+  --color-type-grass: #3FA129;
+  --color-type-ground: #915122;
+  --color-type-ice: #3CCEF2;
+  --color-type-normal: #A0A19F;
+  --color-type-poison: #9140CB;
+  --color-type-psychic: #F04178;
+  --color-type-rock: #AFAA82;
+  --color-type-steel: #5FA2B9;
+  --color-type-water: #2A81F0;
+}
+
 @theme inline {
-  /* --color-background: var(--background);
-  --color-foreground: var(--foreground); */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
-
-/* @media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-} */
 
 body {
   background: var(--background);
