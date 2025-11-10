@@ -1,8 +1,8 @@
 const InputCheck = ({
 	checked,
 	name,
-	onChange,
-}:{
+	onChange
+}: {
 	checked: boolean;
 	name: string;
 	onChange: (e: any) => void;

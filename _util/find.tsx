@@ -56,3 +56,28 @@ export const findGenFullName = (n: number) => {
 
 	return gens[n]
 }
+
+export const findBGByType = (t:string) => {
+	const types: Record<string, string> = {
+		bug: 'bg-type-bug',
+		dark: 'bg-type-dark',
+		dragon: 'bg-type-dragon',
+		electric: 'bg-type-electric',
+		fairy: 'bg-type-fairy',
+		fighting: 'bg-type-fighting',
+		fire: 'bg-type-fire',
+		flying: 'bg-type-flying',
+		ghost: 'bg-type-ghost',
+		grass: 'bg-type-grass',
+		ground: 'bg-type-ground',
+		ice: 'bg-type-ice',
+		normal: 'bg-type-normal',
+		poison: 'bg-type-poison',
+		psychic: 'bg-type-psychic',
+		rock: 'bg-type-rock',
+		steel: 'bg-type-steel',
+		water: 'bg-type-water',
+	}
+
+	return types[t]
+}

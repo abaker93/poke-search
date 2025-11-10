@@ -7,10 +7,12 @@ import Label from '@/_components/_form/label'
 import Select from '@/_components/_form/select'
 import Button from '@/_components/button'
 import Table from '@/_components/table'
+import { TypeChip } from '@/_components/chip'
 import { calcHeightInMeters, calcWeightInKilograms } from '@/_util/calc'
 import { findGenByVerGroup, findGenFullName, findNameByLanguage } from '@/_util/find'
 import Pokedex from 'pokedex-promise-v2'
 import { useEffect, useState } from 'react'
+import { useCheckLongPress } from '@/_util/use'
 
 const P = new Pokedex()
 
@@ -20,8 +22,6 @@ export default function Home() {
 	const [pokemonLoaded, setPokemonLoaded] = useState(false)
 	const [allPokemon, setAllPokemon] = useState<any[]>([])
 	const [filteredPokemon, setFilteredPokemon] = useState<any[]>([])
-
-	// console.log(allPokemon)
 
 	useEffect(() => {
 		const ls:any = localStorage.getItem('pokemon')
@@ -52,11 +52,6 @@ export default function Home() {
 			localStorage.setItem('cache-timeout', timeout.toString())
 		}
 	}, [isLS, offset, pokemonLoaded])
-
-	// useEffect(() => {
-	// 	const sorted = filteredPokemon.sort((a, b) => a.id - b.id)
-	// 	setFilteredPokemon(sorted)
-	// }, [filteredPokemon])
 
 	const getAllPokemon = async () => {
 		try {
@@ -119,6 +114,7 @@ export default function Home() {
 		water: true,
 	})
 	const [fTypesIndex, setFTypesIndex] = useState(0)
+	const [fTypeReq, setFTypeReq] = useState('')
 	const [fGen, setFGen] = useState({
 		gen1: true,
 		gen2: true,
@@ -138,6 +134,8 @@ export default function Home() {
 	const [fWOperator, setFWOperator] = useState('greater')
 	const [fWUnit, setFWUnit] = useState('kilograms')
 
+	const { isLongPress, handlers } = useCheckLongPress()
+
 	const handleAllFilterChange = (e: any, action: 'select' | 'clear', filter: 'fTypes' | 'fGen') => {
 		e.preventDefault()
 		if (action === 'select') {
@@ -151,18 +149,33 @@ export default function Home() {
 			const newFilter = Object.fromEntries(
 				Object.keys(filter === 'fTypes' ? fTypes : fGen).map(key => [key, false])
 			)
-			filter === 'fTypes' ? setFTypes(newFilter as typeof fTypes) : setFGen(newFilter as typeof fGen)
+			if (filter === 'fTypes') {
+				setFTypes(newFilter as typeof fTypes)
+				setFTypeReq('')
+			} else setFGen(newFilter as typeof fGen)
 		}
 	}
 
 	const handleFTypesChange = (e: any) => {
-		const type = e.target.name
-		if (e.target.checked) {
-			setFTypes({...fTypes, [type]: true})
+		const t = e.target.name
+
+		if (isLongPress) {
+			if (fTypeReq == t) setFTypeReq('')
+			else {
+				setFTypes({...fTypes, [t]:true})
+				setFTypeReq(t)
+			}
 		} else {
-			setFTypes({...fTypes, [type]: false})
+			if (e.target.checked) {
+				setFTypes({...fTypes, [t]:true})
+			} else {
+				setFTypes({...fTypes, [t]:false})
+				if (fTypeReq == t) setFTypeReq('')
+			}
 		}
 	}
+
+	// console.log(fTypeReq)
 
 	const handleFTypesIndexChange = (e:any, index: number) => {
 		e.preventDefault()
@@ -213,16 +226,37 @@ export default function Home() {
 
 			switch (fTypesIndex) {
 				case 1:
-					if (p.types.length === 1) return p.types.every((t:string) => selectedTypes.includes(t))
-					else return false
+					if (p.types.length === 1) {
+						if (fTypeReq !== '') return p.types.some((t:string) => fTypeReq.includes(t))
+						return p.types.every((t:string) => selectedTypes.includes(t))
+					} else return false
 				case 2:
 					if (p.types.length === 2) {
-						if (selectedTypes.length > 1) return p.types.every((t:string) => selectedTypes.includes(t))
-						else return selectedTypes.some(t => p.types.includes(t))
+						if (selectedTypes.length > 1) {
+							if (fTypeReq !== '') {
+								const req = p.types.some((t:string) => fTypeReq.includes(t))
+								if (req) return p.types.every((t:string) => selectedTypes.includes(t))
+								else return
+							} else return p.types.every((t:string) => selectedTypes.includes(t))
+						} else return selectedTypes.some(t => p.types.includes(t))
 					}
 					else return false
 				default:
-					return p.types.every((t:string) => selectedTypes.includes(t))
+					if (p.types.length === 2) {
+						if (selectedTypes.length > 1) {
+							if (fTypeReq !== '') {
+								const req = p.types.some((t:string) => fTypeReq.includes(t))
+								if (req) return p.types.every((t:string) => selectedTypes.includes(t))
+								else return
+							} else return p.types.every((t:string) => selectedTypes.includes(t))
+						} else return selectedTypes.some(t => p.types.includes(t))
+					} else {
+						if (fTypeReq !== '') {
+							const req = p.types.some((t:string) => fTypeReq.includes(t))
+							if (req) return p.types.every((t:string) => selectedTypes.includes(t))
+							else return
+						} else return p.types.every((t:string) => selectedTypes.includes(t))
+					}
 			}
 		})
 		.filter(p => {
@@ -283,17 +317,25 @@ export default function Home() {
 					</div>
 					<div className="col-span-3">
 						<div className={formRow}>
-							<div className="flex gap-2 mb-4">
+							<div className="flex gap-2 mb-4 items-center">
 								<Button onClick={e => handleFTypesIndexChange(e, 0)} size="sm" variant={fTypesIndex === 0 ? "filled" : "outline"}>Any</Button>
 								<Button onClick={e => handleFTypesIndexChange(e, 1)} size="sm" variant={fTypesIndex === 1 ? "filled" : "outline"}>Single Type</Button>
 								<Button onClick={e => handleFTypesIndexChange(e, 2)} size="sm" variant={fTypesIndex === 2 ? "filled" : "outline"}>Dual Type</Button>
+								<div className="flex flex-col">
+									<p className="text-slate-400 text-sm leading-4"><em>Check a type to include it</em></p>
+									<p className="text-slate-400 text-sm leading-4"><em>Long press a type to require it</em></p>
+								</div>
 							</div>
 
 							<fieldset className={formChecks}>
 								{Object.entries(fTypes).map(([k, v], i) => (
-									<div key={i} className="flex">
-										<InputCheck name={k} onChange={handleFTypesChange} checked={v} />
-										<Label htmlFor={k} text={k.charAt(0).toUpperCase() + k.slice(1)} />
+									<div key={i} className="flex" {...handlers}>
+										<InputCheck name={k} checked={v} onChange={handleFTypesChange} />
+										<Label htmlFor={k}>
+											<TypeChip type={k} className={
+												`${v ? '' : 'bg-slate-300!'}${fTypeReq == k ? ' border-3 border-indigo-700' : ''}`
+											} />
+										</Label>
 									</div>
 								))}
 							</fieldset>
