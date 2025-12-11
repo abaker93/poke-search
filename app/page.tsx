@@ -2,7 +2,6 @@
 
 import InputCheck from '@/_components/_form/inputCheck'
 import InputNumber from '@/_components/_form/inputNumber'
-import InputText from '@/_components/_form/inputText'
 import Label from '@/_components/_form/label'
 import Select from '@/_components/_form/select'
 import Button from '@/_components/button'
@@ -15,6 +14,7 @@ import { useEffect, useState } from 'react'
 import { useCheckLongPress } from '@/_util/use'
 
 const P = new Pokedex()
+const version = 1.1
 
 export default function Home() {
 	const [isLS, setIsLS] = useState(true)
@@ -26,12 +26,13 @@ export default function Home() {
 	useEffect(() => {
 		const ls:any = localStorage.getItem('pokemon')
 		const lsTimeout:any = localStorage.getItem('cache-timeout')
+		const lsVersion:any = localStorage.getItem('version')
 
-		if (!ls || !lsTimeout) setIsLS(false)
+		if (!ls || !lsTimeout || !lsVersion) setIsLS(false)
 		else {
 			const poke = JSON.parse(ls)
 			const timeout = Date.parse(lsTimeout)
-			const isTimeout = new Date().getTime() >= timeout
+			const isTimeout = lsVersion < version || new Date().getTime() >= timeout
 
 			if (isTimeout) setIsLS(false)
 			else {
@@ -50,6 +51,7 @@ export default function Home() {
 
 			localStorage.setItem('pokemon', JSON.stringify([...allPokemon]))
 			localStorage.setItem('cache-timeout', timeout.toString())
+			localStorage.setItem('version', version.toString())
 		}
 	}, [isLS, offset, pokemonLoaded])
 
@@ -67,15 +69,27 @@ export default function Home() {
 	}
 
 	const getPokemon = async (url: string) => {
+		const formNames = ['10', '50', 'alola', 'aria', 'baile', 'black', 'bloodmoon', 'complete', 'crowned', 'dawn', 'dusk', 'family', 'fan', 'frost', 'galar', 'gmax', 'heat', 'hero', 'hisui', 'ice', 'incarnate', 'land', 'mega', 'meteor', 'midday', 'midnight', 'mow', 'origin', 'paldea', 'pau', 'pirouette', 'plant', 'pom', 'primal', 'rainy', 'red', 'roaming', 'sandy', 'school', 'segment', 'sensu', 'shadow', 'sky', 'snowy', 'solo', 'stellar', 'sunny', 'terastal', 'therian', 'trash', 'ultra', 'unbound', 'wash', 'white', 'zen', 'zero']
+
+		const skippedForms = ['aquatic', 'ash', 'attack', 'belle', 'blade', 'blue', 'bond', 'busted', 'cap', 'cosplay', 'dada', 'defense', 'drive', 'droopy', 'eternal', 'eternamax', 'female', 'glide', 'gliding', 'gorging', 'green', 'gulping', 'hangry', 'indigo', 'large', 'libre', 'limited', 'low', 'mask', 'orange', 'original', 'own-tempo', 'phd', 'pop-star', 'resolute', 'rock-star', 'small', 'speed', 'sprinting', 'starter', 'stretchy', 'super', 'swimming', 'totem', 'violet', 'white-striped', 'yellow']
+
 		try {
 			const poke = await P.getResource(url)
 			const species = await P.getResource(poke.species.url)
 			const form = poke.forms[0] && await P.getResource(poke.forms[0].url)
 
 			if (!form) { return }
+			if (skippedForms.includes(form.form_name) || form.form_name.split('-').some((w:any) => skippedForms.includes(w))) { return }
+			if (form.name === 'eiscue-noice' || form.name === 'zygarde-10') { return }
 
 			const generation = findGenByVerGroup(form.version_group.name)
-			const name = findNameByLanguage(species.names)
+			let name
+
+			if (form.form_name.split('-').some((w:any) =>formNames.includes(w))) {
+				name = findNameByLanguage(form.names) || findNameByLanguage(species.names)
+			} else {
+				name = findNameByLanguage(species.names)
+			}
 
 			return {
 				dex: species.pokedex_numbers.find((f:any) => f.pokedex.name === 'national').entry_number,
@@ -174,8 +188,6 @@ export default function Home() {
 			}
 		}
 	}
-
-	// console.log(fTypeReq)
 
 	const handleFTypesIndexChange = (e:any, index: number) => {
 		e.preventDefault()
