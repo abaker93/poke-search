@@ -2,16 +2,25 @@ import { calcHeightInMeters, calcWeightInKilograms } from "@/_util/calc"
 import { findGenFullName } from "@/_util/find"
 import Image from "next/image"
 
-import Pokedex from 'pokedex-promise-v2'
+
 import Button from "./button"
 import { ReactNode, useEffect, useState } from "react"
 import { ArrowDown, ArrowUp } from "@/_util/_icons/arrows"
+
+import Pokedex from 'pokedex-promise-v2'
+import { scorePokemon } from "@/_util/scorePokemon"
+import { sortedPokemon } from "@/_util/sort"
 
 const P = new Pokedex()
 
 const Table = ({ filteredPokemon }: { filteredPokemon: any[] }) => {
 	const [sortIndex, setSortIndex] = useState(0)
 	const [sortDir, setSortDir] = useState(0)
+
+	useEffect(() => {
+		if (filteredPokemon.length === 0) return
+		else scorePokemon(filteredPokemon)
+	}, [filteredPokemon])
 
 	const handleSortIndexChange = (e:any, i:number) => {
 		e.preventDefault()
@@ -28,28 +37,7 @@ const Table = ({ filteredPokemon }: { filteredPokemon: any[] }) => {
 		}
 	}
 
-	const sortedPokemon = (a:any, b:any) => {
-		switch (sortIndex) {
-			case 1:
-				if (sortDir === 0) return a.name.localeCompare(b.name)
-				else return b.name.localeCompare(a.name)
-			case 2:
-				if (sortDir === 0) return a.dex - b.dex
-				else return b.dex - a.dex
-			case 3:
-				if (sortDir === 0) return a.generation - b.generation
-				else return b.generation - a.generation
-			case 4:
-				if (sortDir === 0) return a.height - b.height
-				else return b.height - a.height
-			case 5:
-				if (sortDir === 0) return a.weight - b.weight
-				else return b.weight - a.weight
-			default:
-				return a.id - b.id
-		}
-	}
-
+	//~ No Pokemon Found
 	if (filteredPokemon.length === 0) {
 		return (
 			<SearchResults sortIndex={sortIndex} sortDir={sortDir} onSort={handleSortIndexChange} disabled>
@@ -76,7 +64,7 @@ const Table = ({ filteredPokemon }: { filteredPokemon: any[] }) => {
 					</tr>
 				</thead>
 				<tbody>
-					{filteredPokemon.sort((a,b) => sortedPokemon(a,b)).map((p, i) => (
+					{filteredPokemon.sort((a,b) => sortedPokemon({a, b, index: sortIndex, direction: sortDir})).map((p, i) => (
 						<TableRow key={i} p={p} />
 					))}
 				</tbody>
