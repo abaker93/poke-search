@@ -6,6 +6,7 @@ import Pokedex from 'pokedex-promise-v2'
 import Button from "./button"
 import { ReactNode, useEffect, useState } from "react"
 import { ArrowDown, ArrowUp } from "@/_util/_icons/arrows"
+import { TypeChip } from "./chip"
 
 const P = new Pokedex()
 
@@ -144,7 +145,11 @@ const TableRow = ({ p }: { p: any }) => {
 				</div>
 			</td>
 			<td>#{p.dex}</td>
-			<td>{p.types.map((t: any) => t).join(', ')}</td>
+			<td>
+				{p.types.map((t: string, i: number) => (
+					<TypeChip key={i} type={t} className="not-last:me-1 font-bold" />
+				))}
+			</td>
 			<td>{findGenFullName(p.generation)}</td>
 			<td>{calcHeightInMeters(p.height)} m</td>
 			<td>{calcWeightInKilograms(p.weight)} kg</td>
