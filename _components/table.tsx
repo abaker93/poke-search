@@ -7,12 +7,19 @@ import Button from "./button"
 import { ReactNode, useEffect, useState } from "react"
 import { ArrowDown, ArrowUp } from "@/_util/_icons/arrows"
 import { TypeChip } from "./chip"
+import { Equal } from "@/_util/_icons/symbols"
 
 const P = new Pokedex()
 
 const Table = ({ filteredPokemon }: { filteredPokemon: any[] }) => {
 	const [sortIndex, setSortIndex] = useState(0)
 	const [sortDir, setSortDir] = useState(0)
+	const [selectedPoke, setSelectedPoke] = useState(3) 
+
+	const handleSelectedPoke = (e:any, i:number) => {
+		// e.preventDefault()
+		setSelectedPoke(i)
+	}
 
 	const handleSortIndexChange = (e:any, i:number) => {
 		e.preventDefault()
@@ -78,7 +85,7 @@ const Table = ({ filteredPokemon }: { filteredPokemon: any[] }) => {
 				</thead>
 				<tbody>
 					{filteredPokemon.sort((a,b) => sortedPokemon(a,b)).map((p, i) => (
-						<TableRow key={i} p={p} />
+						<TableRow key={i} p={p} selected={p.id === selectedPoke} selectPoke={handleSelectedPoke} />
 					))}
 				</tbody>
 			</table>
@@ -125,9 +132,19 @@ const SearchResults = ({
 	)
 }
 
-const TableRow = ({ p }: { p: any }) => {
+const TableRow = ({
+	p,
+	selected,
+	selectPoke,
+}: {
+	p: any
+	selected: boolean
+	selectPoke: (e: any, i: number) => void
+}) => {
+	const filterBtns = "bg-gray-200 text-gray-500 p-1 rounded-full hover:bg-indigo-200 hover:text-indigo-500 active:bg-indigo-300"
+
 	return (
-		<tr className="hover:bg-slate-100">
+		<tr className={`${selected && 'bg-slate-100'} hover:bg-slate-100`} onClick={e => selectPoke(e, p.id)}>
 			<td>
 				<div className="flex items-center gap-3">
 					{p.sprite ? (
@@ -150,9 +167,54 @@ const TableRow = ({ p }: { p: any }) => {
 					<TypeChip key={i} type={t} className="not-last:me-1 font-bold" />
 				))}
 			</td>
-			<td>{findGenFullName(p.generation)}</td>
-			<td>{calcHeightInMeters(p.height)} m</td>
-			<td>{calcWeightInKilograms(p.weight)} kg</td>
+			<td>
+				{findGenFullName(p.generation)}
+				{selected && (
+					<div className="flex gap-0.5">
+						<div className={filterBtns}>
+							<ArrowUp className="size-3" />
+						</div>
+						<div className={filterBtns}>
+							<Equal className="size-3" />
+						</div>
+						<div className={filterBtns}>
+							<ArrowDown className="size-3" />
+						</div>
+					</div>
+				)}
+			</td>
+			<td>
+				{calcHeightInMeters(p.height)} m
+				{selected && (
+					<div className="flex gap-0.5">
+						<div className={filterBtns}>
+							<ArrowUp className="size-3" />
+						</div>
+						<div className={filterBtns}>
+							<Equal className="size-3" />
+						</div>
+						<div className={filterBtns}>
+							<ArrowDown className="size-3" />
+						</div>
+					</div>
+				)}
+			</td>
+			<td>
+				{calcWeightInKilograms(p.weight)} kg
+				{selected && (
+					<div className="flex gap-0.5">
+						<div className={filterBtns}>
+							<ArrowUp className="size-3" />
+						</div>
+						<div className={filterBtns}>
+							<Equal className="size-3" />
+						</div>
+						<div className={filterBtns}>
+							<ArrowDown className="size-3" />
+						</div>
+					</div>
+				)}
+			</td>
 		</tr>
 	)
 }
