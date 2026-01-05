@@ -215,32 +215,34 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 		onSubmit(filtered)
 	}
 
-	const formH2 = "text-xl font-bold text-indigo-800"
+	const formH2 = "text-xl font-bold text-indigo-800 mb-3"
 	const formH3 = "font-bold text-indigo-800"
-	const formSection = "grid grid-cols-4 py-10 border-t border-slate-200"
+	const formSection = "grid grid-cols-5 py-10 border-t border-slate-200"
 	const formRow = "flex flex-col mb-2"
-	const formChecks = "grid grid-cols-3 md:grid-cols-4"
 
 	return (
 		<form onSubmit={e => e.preventDefault()} className="bg-white p-10 rounded-lg shadow-lg max-w-4xl mx-auto mb-10">
-			{/* Types */}
-			<div className={formSection}>
-				<div>
-					<h2 className={formH2}>Types</h2>
-				</div>
+			{/* Types & Generations */}
+			<div className={`${formSection} gap-6`}>
+				{/* Types */}
 				<div className="col-span-3">
 					<div className={formRow}>
+						<div>
+							<h2 className={formH2}>Types</h2>
+						</div>
 						<div className="flex gap-2 mb-4 items-center">
-							<Button onClick={e => handleFTypesIndexChange(e, 0)} size="sm" variant={fTypesIndex === 0 ? "filled" : "outline"}>Any</Button>
-							<Button onClick={e => handleFTypesIndexChange(e, 1)} size="sm" variant={fTypesIndex === 1 ? "filled" : "outline"}>Single Type</Button>
-							<Button onClick={e => handleFTypesIndexChange(e, 2)} size="sm" variant={fTypesIndex === 2 ? "filled" : "outline"}>Dual Type</Button>
+							<div className="flex max-md:flex-col gap-1 md:gap-2">
+								<Button onClick={e => handleFTypesIndexChange(e, 0)} size="sm" variant={fTypesIndex === 0 ? "filled" : "outline"}>Any</Button>
+								<Button onClick={e => handleFTypesIndexChange(e, 1)} size="sm" variant={fTypesIndex === 1 ? "filled" : "outline"}>Single Type</Button>
+								<Button onClick={e => handleFTypesIndexChange(e, 2)} size="sm" variant={fTypesIndex === 2 ? "filled" : "outline"}>Dual Type</Button>
+							</div>
 							<div className="flex flex-col">
 								<p className="text-slate-400 text-sm leading-4"><em>Check a type to include it</em></p>
 								<p className="text-slate-400 text-sm leading-4"><em>Long press a type to require it</em></p>
 							</div>
 						</div>
 
-						<fieldset className={formChecks}>
+						<fieldset className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
 							{Object.entries(fTypes).map(([k, v], i) => (
 								<div key={i} className="flex" {...handlers}>
 									<InputCheck name={k} checked={v} onChange={handleFTypesChange} />
@@ -259,18 +261,15 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 						<Button size="sm" onClick={e => handleAllFilterChange(e, 'clear', 'fTypes')} >Clear All</Button>
 					</div>
 				</div>
-			</div>
 
-
-			{/* Generations */}
-			<div className={formSection}>
-				<div>
-					<h2 className={formH2}>Generations</h2>
-				</div>
-				<div className="col-span-3">
+				{/* Generations */}
+				<div className="col-span-2">
 					<div className={formRow}>
+						<div>
+							<h2 className={formH2}>Generations</h2>
+						</div>
 						<h3 className={formH3}>Introduced in</h3>
-						<fieldset>
+						<fieldset className="grid grid-cols-1 md:grid-cols-2">
 							{Object.entries(fGen).map(([k,v], i) => (
 								<div key={i} className="flex">
 									<InputCheck name={k} onChange={handleFGenChange} checked={v} />
@@ -278,11 +277,6 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 								</div>
 							))}
 						</fieldset>
-					</div>
-
-					<div className="flex gap-2 mt-4">
-						<Button size="sm" onClick={e => handleAllFilterChange(e, 'select', 'fGen')} >Select All</Button>
-						<Button size="sm" onClick={e => handleAllFilterChange(e, 'clear', 'fGen')} >Clear All</Button>
 					</div>
 				</div>
 			</div>
