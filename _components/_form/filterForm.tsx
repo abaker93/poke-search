@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Button from "../button"
 import { useCheckLongPress } from "@/_util/use"
 import InputCheck from "./inputCheck"
@@ -9,7 +9,17 @@ import Select from "./select"
 import InputNumber from "./inputNumber"
 import { calcHeightInMeters, calcWeightInKilograms } from "@/_util/calc"
 
-const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], pokemonLoaded: boolean, onSubmit: (filtered: any[]) => void}) => {
+const FilterForm = ({
+	allPokemon,
+	pokeAdj,
+	pokemonLoaded,
+	onSubmit
+}: {
+	allPokemon: any[]
+	pokeAdj: any
+	pokemonLoaded: boolean
+	onSubmit: (filtered: any[]) => void
+}) => {
 	const { isLongPress, handlers } = useCheckLongPress()
 
 	const [fTypes, setFTypes] = useState({
@@ -52,6 +62,38 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 	const [fWeight, setFWeight] = useState([0, 0])
 	const [fWOperator, setFWOperator] = useState('greater')
 	const [fWUnit, setFWUnit] = useState('kilograms')
+
+	const [isAdj, setIsAdj] = useState(false)
+
+	useEffect(() => {
+		if (pokeAdj.gen[0] !== 0) {
+			if (pokeAdj.gen[1] == 1) {
+				let newFGen = {}
+				for (let i=pokeAdj.gen[0]; i<11; i++) {
+					newFGen = {...newFGen, ['gen'+i]: false}
+				}
+				setFGen({...fGen, ...newFGen})
+				setIsAdj(true)
+			}
+
+			if (pokeAdj.gen[1] == 2) {
+				const newFilter = Object.fromEntries(
+					Object.keys(fGen).map(key => [key, false])
+				)
+				setFGen({...fGen, ...newFilter, ['gen'+pokeAdj.gen[0]]: true})
+				setIsAdj(true)
+			}
+
+			if (pokeAdj.gen[1] == 3) {
+				let newFGen = {}
+				for (let i=1; i<pokeAdj.gen[0]+1; i++) {
+					newFGen = {...newFGen, ['gen'+i]: false}
+				}
+				setFGen({...fGen, ...newFGen})
+				setIsAdj(true)
+			}
+		}
+	}, [pokeAdj])
 
 	const handleAllFilterChange = (e: any, action: 'select' | 'clear', filter: 'fTypes' | 'fGen') => {
 		e.preventDefault()
@@ -97,7 +139,7 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 		setFTypesIndex(index)
 	}
 
-	const handleFGenChange = (e: any) => {
+	const handleFGenChange = (e:any, g?:string, c?:boolean) => {
 		const gen = e.target.name
 		if (e.target.checked) {
 			setFGen({...fGen, [gen]: true})
@@ -187,9 +229,9 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 			if (fHUnit === 'meters') calcH = calcHeightInMeters(p.height)
 			if (fHUnit === 'feet') calcH = p.height //TODO: fix calc to feet
 
-			if (fHOperator === 'greater') return calcH >= fHeight[0]
+			if (fHOperator === 'greater') return calcH > fHeight[0]
 			if (fHOperator === 'equal') return calcH == fHeight[0]
-			if (fHOperator === 'less') return calcH <= fHeight[0]
+			if (fHOperator === 'less') return calcH < fHeight[0]
 			if (fHOperator === 'between') {
 				const min = Math.min(fHeight[0], fHeight[1])
 				const max = Math.max(fHeight[0], fHeight[1])
@@ -202,9 +244,9 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 			if (fWUnit === 'kilograms') calcW = calcWeightInKilograms(p.weight)
 			if (fWUnit === 'pounds') calcW = p.weight //TODO: fix calc to pounds
 
-			if (fWOperator === 'greater') return calcW >= fWeight[0]
+			if (fWOperator === 'greater') return calcW > fWeight[0]
 			if (fWOperator === 'equal') return calcW == fWeight[0]
-			if (fWOperator === 'less') return calcW <= fWeight[0]
+			if (fWOperator === 'less') return calcW < fWeight[0]
 			if (fWOperator === 'between') {
 				const min = Math.min(fWeight[0], fWeight[1])
 				const max = Math.max(fWeight[0], fWeight[1])
@@ -214,6 +256,7 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 
 		onSubmit(filtered)
 	}
+	
 
 	const formH2 = "text-xl font-bold text-indigo-800 mb-3"
 	const formH3 = "font-bold text-indigo-800"
@@ -221,7 +264,7 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 	const formRow = "flex flex-col mb-2"
 
 	return (
-		<form onSubmit={e => e.preventDefault()} className="bg-white p-10 rounded-lg shadow-lg max-w-4xl mx-auto mb-10">
+		<form onSubmit={e => e.preventDefault()} className="bg-white p-10 rounded-3xl shadow-lg max-w-4xl mx-auto mb-10">
 			{/* Types & Generations */}
 			<div className={`${formSection} gap-6`}>
 				{/* Types */}
@@ -248,7 +291,7 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 									<InputCheck name={k} checked={v} onChange={handleFTypesChange} />
 									<Label htmlFor={k}>
 										<TypeChip type={k} className={
-											`${v ? '' : 'bg-slate-300!'}${fTypeReq == k ? ' border-3 border-indigo-700' : ''}`
+											`${v ? '' : 'opacity-30!'}${fTypeReq == k ? ' border-3 border-indigo-700' : ''}`
 										} />
 									</Label>
 								</div>
@@ -265,18 +308,21 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 				{/* Generations */}
 				<div className="col-span-2">
 					<div className={formRow}>
-						<div>
-							<h2 className={formH2}>Generations</h2>
-						</div>
+						<div><h2 className={formH2}>Generations</h2></div>
 						<h3 className={formH3}>Introduced in</h3>
 						<fieldset className="grid grid-cols-1 md:grid-cols-2">
 							{Object.entries(fGen).map(([k,v], i) => (
 								<div key={i} className="flex">
 									<InputCheck name={k} onChange={handleFGenChange} checked={v} />
-									<Label htmlFor={k} text={findGenFullName(parseInt(k.slice(3)))} />
+									<Label htmlFor={k} className={`${v ? '' : ' opacity-30!'}`} text={findGenFullName(parseInt(k.slice(3)))} />
 								</div>
 							))}
 						</fieldset>
+					</div>
+
+					<div className="flex gap-2 mt-4">
+						<Button size="sm" onClick={e => handleAllFilterChange(e, 'select', 'fGen')} >Select All</Button>
+						<Button size="sm" onClick={e => handleAllFilterChange(e, 'clear', 'fGen')} >Clear All</Button>
 					</div>
 				</div>
 			</div>
@@ -298,9 +344,9 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 								value={fHOperator}
 								onChange={(e:any) => setFHOperator(e.target.value)}
 								options={[
-									{ value: 'greater', label: '≥' },
+									{ value: 'greater', label: '>' },
 									{ value: 'equal', label: '=' },
-									{ value: 'less', label: '≤' },
+									{ value: 'less', label: '<' },
 									{ value: 'between', label: 'between' },
 								]}
 							/>
@@ -329,9 +375,9 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 								value={fWOperator}
 								onChange={(e:any) => setFWOperator(e.target.value)}
 								options={[
-									{ value: 'greater', label: '≥' },
+									{ value: 'greater', label: '>' },
 									{ value: 'equal', label: '=' },
-									{ value: 'less', label: '≤' },
+									{ value: 'less', label: '<' },
 									{ value: 'between', label: 'between' },
 								]}
 							/>
@@ -355,9 +401,11 @@ const FilterForm = ({allPokemon, pokemonLoaded, onSubmit}: {allPokemon: any[], p
 			</div>
 
 
-			<Button size="lg" onClick={handleSubmit} disabled={!pokemonLoaded}>
-				{pokemonLoaded ? "Filter & Search" : "Loading"}
-			</Button>
+			<div className={`${isAdj ? 'sticky z-50 top-8' : ''}`}>
+				<Button size="lg" onClick={handleSubmit} disabled={!pokemonLoaded}>
+					{pokemonLoaded ? "Filter & Search" : "Loading"}
+				</Button>
+			</div>
 		</form>
 	)
 }

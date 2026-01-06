@@ -6,9 +6,12 @@ import { findGenByVerGroup, findNameByLanguage } from '@/_util/find'
 
 import { useEffect, useState } from 'react'
 import Pokedex from 'pokedex-promise-v2'
+import Alert from '@/_components/alert'
 
 const P = new Pokedex()
 const version = 1.1
+
+const boldYellow = "font-bold text-yellow-300"
 
 export default function Home() {
 	const [isLS, setIsLS] = useState(true)
@@ -100,18 +103,37 @@ export default function Home() {
 			console.error(e)
 		}
 	}
-	
+
+	const [pokeAdj, setPokeAdj] = useState({
+		gen: [0,0],
+		height: [0,0],
+		weight: [0,0]
+	})
+
+	const adjustGen = (g:number, i:number) => {
+		setPokeAdj({...pokeAdj, gen:[g,i]})
+	}
+
 	return (
 		<main>
 			<h1 className="text-5xl my-10 mx-5 text-center font-black uppercase tracking-widest">Pokedex Search</h1>
+
+			<Alert icon="✨">
+				<h2 className="font-bold text-xl text-indigo-400 mb-2">Version 1.2</h2>
+				{/* <p><strong>Dark Mode! 🌚 🌝</strong> & toggle</p> */}
+				<p><strong>Height & weight</strong> - updated options to <span className={boldYellow}>&gt;</span> / <span className={boldYellow}>&lt;</span> instead of <span className={boldYellow}>≥</span> / <span className={boldYellow}>≤</span></p>
+			</Alert>
 
 			<FilterForm
 				allPokemon={allPokemon}
 				pokemonLoaded={pokemonLoaded}
 				onSubmit={setFilteredPokemon}
+				pokeAdj={pokeAdj}
 			/>
 
-			{filteredPokemon && <Table filteredPokemon={filteredPokemon} />}
+			{filteredPokemon && 
+				<Table filteredPokemon={filteredPokemon} adjustGen={adjustGen} />
+			}
 		</main>
 	);
 }

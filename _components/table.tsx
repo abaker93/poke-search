@@ -4,22 +4,23 @@ import Image from "next/image"
 
 import Pokedex from 'pokedex-promise-v2'
 import Button from "./button"
-import { ReactNode, useEffect, useState } from "react"
+import { ReactNode, useState } from "react"
 import { ArrowDown, ArrowUp } from "@/_util/_icons/arrows"
 import { TypeChip } from "./chip"
 import { Equal } from "@/_util/_icons/symbols"
 
 const P = new Pokedex()
 
-const Table = ({ filteredPokemon }: { filteredPokemon: any[] }) => {
+const Table = ({
+	filteredPokemon,
+	adjustGen,
+}: {
+	filteredPokemon: any[]
+	adjustGen: (g:number, i:number) => void
+}) => {
 	const [sortIndex, setSortIndex] = useState(0)
 	const [sortDir, setSortDir] = useState(0)
-	const [selectedPoke, setSelectedPoke] = useState(3) 
-
-	const handleSelectedPoke = (e:any, i:number) => {
-		// e.preventDefault()
-		setSelectedPoke(i)
-	}
+	const [selectedPoke, setSelectedPoke] = useState(636)		//TODO: remove placeholder id
 
 	const handleSortIndexChange = (e:any, i:number) => {
 		e.preventDefault()
@@ -74,7 +75,7 @@ const Table = ({ filteredPokemon }: { filteredPokemon: any[] }) => {
 
 			<table className="w-full">
 				<thead>
-					<tr className="*:bg-indigo-700/75 *:text-white *:py-3 *:sticky *:top-[68px] *:backdrop-blur-xs *:border-b-2 *:border-indigo-700">
+					<tr className="bg-indigo-700/75 *:text-white *:py-3 sticky top-[68px] backdrop-blur-xs *:border-b-2 *:border-indigo-700">
 						<th>Name</th>
 						<th>Num</th>
 						<th>Type</th>
@@ -85,7 +86,7 @@ const Table = ({ filteredPokemon }: { filteredPokemon: any[] }) => {
 				</thead>
 				<tbody>
 					{filteredPokemon.sort((a,b) => sortedPokemon(a,b)).map((p, i) => (
-						<TableRow key={i} p={p} selected={p.id === selectedPoke} selectPoke={handleSelectedPoke} />
+						<TableRow key={i} p={p} selected={p.id === selectedPoke} selectPoke={(e:any) => setSelectedPoke(e)} adjustGen={adjustGen} />
 					))}
 				</tbody>
 			</table>
@@ -135,16 +136,19 @@ const SearchResults = ({
 const TableRow = ({
 	p,
 	selected,
+	adjustGen,
 	selectPoke,
 }: {
+	
 	p: any
 	selected: boolean
-	selectPoke: (e: any, i: number) => void
+	adjustGen: (g:number, i:number) => void
+	selectPoke: (e:number) => void
 }) => {
 	const filterBtns = "bg-gray-200 text-gray-500 p-1 rounded-full hover:bg-indigo-200 hover:text-indigo-500 active:bg-indigo-300"
 
 	return (
-		<tr className={`${selected && 'bg-slate-100'} hover:bg-slate-100`} onClick={e => selectPoke(e, p.id)}>
+		<tr className={`${selected && 'bg-slate-100'} hover:bg-slate-100`} onClick={e => selectPoke(p.id)}>
 			<td>
 				<div className="flex items-center gap-3">
 					{p.sprite ? (
@@ -172,48 +176,48 @@ const TableRow = ({
 				{selected && (
 					<div className="flex gap-0.5">
 						<div className={filterBtns}>
-							<ArrowUp className="size-3" />
+							<ArrowDown className="size-3" onClick={() => adjustGen(p.generation, 1)} />
 						</div>
 						<div className={filterBtns}>
-							<Equal className="size-3" />
+							<Equal className="size-3" onClick={() => adjustGen(p.generation, 2)} />
 						</div>
 						<div className={filterBtns}>
-							<ArrowDown className="size-3" />
+							<ArrowUp className="size-3" onClick={() => adjustGen(p.generation, 3)} />
 						</div>
 					</div>
 				)}
 			</td>
 			<td>
 				{calcHeightInMeters(p.height)} m
-				{selected && (
+				{/* {selected && (
 					<div className="flex gap-0.5">
 						<div className={filterBtns}>
-							<ArrowUp className="size-3" />
+							<ArrowDown className="size-3" />
 						</div>
 						<div className={filterBtns}>
 							<Equal className="size-3" />
 						</div>
 						<div className={filterBtns}>
-							<ArrowDown className="size-3" />
+							<ArrowUp className="size-3" />
 						</div>
 					</div>
-				)}
+				)} */}
 			</td>
 			<td>
 				{calcWeightInKilograms(p.weight)} kg
-				{selected && (
+				{/* {selected && (
 					<div className="flex gap-0.5">
 						<div className={filterBtns}>
-							<ArrowUp className="size-3" />
+							<ArrowDown className="size-3" />
 						</div>
 						<div className={filterBtns}>
 							<Equal className="size-3" />
 						</div>
 						<div className={filterBtns}>
-							<ArrowDown className="size-3" />
+							<ArrowUp className="size-3" />
 						</div>
 					</div>
-				)}
+				)} */}
 			</td>
 		</tr>
 	)
