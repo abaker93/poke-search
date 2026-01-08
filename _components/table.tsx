@@ -14,9 +14,11 @@ const P = new Pokedex()
 const Table = ({
 	filteredPokemon,
 	adjustGen,
+	adjustHeight,
 }: {
 	filteredPokemon: any[]
 	adjustGen: (g:number, i:number) => void
+	adjustHeight: (h:number, i:number) => void
 }) => {
 	const [sortIndex, setSortIndex] = useState(0)
 	const [sortDir, setSortDir] = useState(0)
@@ -86,7 +88,14 @@ const Table = ({
 				</thead>
 				<tbody>
 					{filteredPokemon.sort((a,b) => sortedPokemon(a,b)).map((p, i) => (
-						<TableRow key={i} p={p} selected={p.id === selectedPoke} selectPoke={(e:any) => setSelectedPoke(e)} adjustGen={adjustGen} />
+						<TableRow
+							key={i}
+							p={p}
+							selected={p.id === selectedPoke}
+							selectPoke={(e:any) => setSelectedPoke(e)}
+							adjustGen={adjustGen}
+							adjustHeight={adjustHeight}
+						/>
 					))}
 				</tbody>
 			</table>
@@ -137,12 +146,14 @@ const TableRow = ({
 	p,
 	selected,
 	adjustGen,
+	adjustHeight,
 	selectPoke,
 }: {
 	
 	p: any
 	selected: boolean
 	adjustGen: (g:number, i:number) => void
+	adjustHeight: (h:number, i:number) => void
 	selectPoke: (e:number) => void
 }) => {
 	const filterBtns = "bg-gray-200 text-gray-500 p-1 rounded-full hover:bg-indigo-200 hover:text-indigo-500 active:bg-indigo-300"
@@ -189,19 +200,19 @@ const TableRow = ({
 			</td>
 			<td>
 				{calcHeightInMeters(p.height)} m
-				{/* {selected && (
+				{selected && (
 					<div className="flex gap-0.5">
 						<div className={filterBtns}>
-							<ArrowDown className="size-3" />
+							<ArrowDown className="size-3" onClick={() => adjustHeight(p.height, 1)} />
 						</div>
 						<div className={filterBtns}>
-							<Equal className="size-3" />
+							<Equal className="size-3" onClick={() => adjustHeight(p.height, 2)} />
 						</div>
 						<div className={filterBtns}>
-							<ArrowUp className="size-3" />
+							<ArrowUp className="size-3" onClick={() => adjustHeight(p.height, 3)} />
 						</div>
 					</div>
-				)} */}
+				)}
 			</td>
 			<td>
 				{calcWeightInKilograms(p.weight)} kg

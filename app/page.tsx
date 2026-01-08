@@ -110,10 +110,6 @@ export default function Home() {
 		weight: [0,0]
 	})
 
-	const adjustGen = (g:number, i:number) => {
-		setPokeAdj({...pokeAdj, gen:[g,i]})
-	}
-
 	return (
 		<main>
 			<h1 className="text-5xl my-10 mx-5 text-center font-black uppercase tracking-widest">Pokedex Search</h1>
@@ -132,7 +128,11 @@ export default function Home() {
 			/>
 
 			{filteredPokemon && 
-				<Table filteredPokemon={filteredPokemon} adjustGen={adjustGen} />
+				<Table
+					filteredPokemon={filteredPokemon}
+					adjustGen={(g, i) => setPokeAdj({...pokeAdj, gen:[g,i]})}
+					adjustHeight={(h, i) => setPokeAdj({...pokeAdj, height:[h,i]})}
+				/>
 			}
 		</main>
 	);
